@@ -22,7 +22,7 @@ class Dna(object):
         prev_pixels = 0
 
 	# loop over the boundaries, find the most fitting color 
-	for boundaries in color_boundaries:
+	for boundaries in COLOR_BOUNDARIES:
     		for (lower, upper) in boundaries:
         		# create NumPy arrays from the boundaries
         		lower = np.array(lower, dtype = "uint8")
@@ -37,12 +37,12 @@ class Dna(object):
         		cnts = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         		cnts = imutils.grab_contours(cnts)
         		c = max(cnts, key = cv2.contourArea) 
-                        # compute the bounding box of the of the color region 
-        		marker = cv2.minAreaRect(c)
 			
         		if (pixels >= prev_pixels):
             			curr_color = color
-                                curr_marker = marker
+                                curr_cnt = c
+                        print(pixels)
+
     		color += 1
     		prev_pixels = pixels
 
@@ -50,12 +50,14 @@ class Dna(object):
     		print("Pink Beacon identified!")
 	else:
     		print("Green Beacon identified!")
-        return curr_marker
+        return curr_cnt
 
     def find_marker(self, image):
         # detect the beacon color and the respective contour based on it
-        marker = self.detect_color(image)   
-        return marker
+        c = self.detect_color(image)   
+        
+        # compute the bounding box of the of the color region and return it 
+        return (cv2.minAreaRect(c), c)
 
     def find_angle(self, cnt, distance):
         # Find left extreme point
