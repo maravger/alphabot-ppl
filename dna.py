@@ -8,22 +8,54 @@ import math
 KNOWN_WIDTH = 12
 
 PIC_CENTRE_WIDTH = 1296 # x-centre-coordinate of the 2596x1944 resolution picture
-FOCALLENGTH = 4700
+FOCALLENGTH = 4305
+
+#TODO correctly define the list of boundaries (pink, green)
+COLOR_BOUNDARIES = [
+    [([160, 140, 150], [200, 170, 200])], [([120, 130, 130], [160, 170, 180])]
+]
 
 class Dna(object):
+    def detect_color(self, image):
+        # 0 = pink, 1 = green 
+        color = 0
+        prev_pixels = 0
+
+	# loop over the boundaries, find the most fitting color 
+	for boundaries in color_boundaries:
+    		for (lower, upper) in boundaries:
+        		# create NumPy arrays from the boundaries
+        		lower = np.array(lower, dtype = "uint8")
+        		upper = np.array(upper, dtype = "uint8") 
+        		# find the colors within the specified boundaries and apply
+        		# the mask
+        		mask = cv2.inRange(image, lower, upper)
+        		mask_lists = mask.tolist()
+        		pixels = sum(x > 0 for lis in mask_lists for x in lis)
+
+        		# find contour based on colour
+        		cnts = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        		cnts = imutils.grab_contours(cnts)
+        		c = max(cnts, key = cv2.contourArea) 
+                        # compute the bounding box of the of the color region 
+        		marker = cv2.minAreaRect(c)
+			
+        		if (pixels >= prev_pixels):
+            			curr_color = color
+                                curr_marker = marker
+    		color += 1
+    		prev_pixels = pixels
+
+	if (curr_color == 0):
+    		print("Pink Beacon identified!")
+	else:
+    		print("Green Beacon identified!")
+        return curr_marker
+
     def find_marker(self, image):
-        # convert the image to grayscale, blur it, and detect edges
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        ret,gray = cv2.threshold(gray,190,255,0)
-
-        # find the contours in the edged image and keep the largest one;
-        # we'll assume that this is our piece of paper in the image
-        cnts = cv2.findContours(gray.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        cnts = imutils.grab_contours(cnts)
-        c = max(cnts, key = cv2.contourArea)
-
-        # compute the bounding box of the of the paper region and return it
-        return (cv2.minAreaRect(c), c)
+        # detect the beacon color and the respective contour based on it
+        marker = self.detect_color(image)   
+        return marker
 
     def find_angle(self, cnt, distance):
         # Find left extreme point
