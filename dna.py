@@ -4,11 +4,14 @@ import imutils
 import cv2
 import math
 
-# initialize the known object width, which in this case is the beacon
+# initialize the known object width (cm), which in this case is the beacon
 KNOWN_WIDTH = 9.5
 
+# initialize camera-lenses real world distance (cm) from robot centre
+DIST_FROM_CENTRE = 7
+
 PIC_CENTRE_WIDTH = 1296 # x-centre-coordinate of the 2596x1944 resolution picture
-FOCALLENGTH = 4305
+FOCAL_LENGTH = 4305
 
 # define the list of boundaries (red, blue)
 # IMPORTANT: colour boundaries should be BGR
@@ -82,9 +85,9 @@ class Dna(object):
         angle = math.asin(c)
         return angle
 
-    def find_distance(self, knownWidth, focalLength, perWidth):
+    def find_distance(self, knownWidth, focalLength, perWidth, distFromCentre):
         # compute and return the distance from the maker to the camera
-        return (knownWidth * focalLength) / perWidth
+        return ((knownWidth * focalLength) / perWidth) + distFromCentre
 
     def find_distance_and_angle(self, imagePath):
         print("Checking image: " + imagePath)
@@ -92,7 +95,7 @@ class Dna(object):
         # distance to the marker from the camera
         image = cv2.imread(imagePath)
         marker, contour = self.find_marker(image)
-        cms = self.find_distance(KNOWN_WIDTH, FOCALLENGTH, marker[1][0])
+        cms = self.find_distance(KNOWN_WIDTH, FOCAL_LENGTH, marker[1][0], DIST_FROM_CENTRE)
         angle = self.find_angle(contour, cms)
         print("Calculated Distance: %.2f cm" % cms)
         print("Calculated Angle: %.2f Deg" % math.degrees(angle))
