@@ -5,14 +5,15 @@ import cv2
 import math
 
 # initialize the known object width, which in this case is the beacon
-KNOWN_WIDTH = 12
+KNOWN_WIDTH = 9.5
 
 PIC_CENTRE_WIDTH = 1296 # x-centre-coordinate of the 2596x1944 resolution picture
 FOCALLENGTH = 4305
 
-#TODO correctly define the list of boundaries (pink, green)
+# define the list of boundaries (red, blue)
+# IMPORTANT: colour boundaries should be BGR
 COLOR_BOUNDARIES = [
-    [([160, 140, 150], [200, 170, 200])], [([120, 130, 130], [160, 170, 180])]
+    [([60, 30, 150], [100, 80, 210])], [([150, 130, 20], [255, 230, 150])]
 ]
 
 class Dna(object):
@@ -32,24 +33,26 @@ class Dna(object):
         		mask = cv2.inRange(image, lower, upper)
         		mask_lists = mask.tolist()
         		pixels = sum(x > 0 for lis in mask_lists for x in lis)
-
-        		# find contour based on colour
-        		cnts = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        		cnts = imutils.grab_contours(cnts)
-        		c = max(cnts, key = cv2.contourArea) 
+                        
+                        try:
+        		    # find contour based on colour
+        		    cnts = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        		    cnts = imutils.grab_contours(cnts)
+        		    c = max(cnts, key = cv2.contourArea) 
 			
-        		if (pixels >= prev_pixels):
+        		    if (pixels >= prev_pixels):
             			curr_color = color
                                 curr_cnt = c
-                        print(pixels)
+                        except ValueError:
+                            print('0 pixels of this colour found!')
 
     		color += 1
     		prev_pixels = pixels
 
 	if (curr_color == 0):
-    		print("Pink Beacon identified!")
+    		print("Red Beacon identified!")
 	else:
-    		print("Green Beacon identified!")
+    		print("Blue Beacon identified!")
         return curr_cnt
 
     def find_marker(self, image):
