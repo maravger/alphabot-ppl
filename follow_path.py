@@ -1,4 +1,6 @@
 from simple_grid_nav import *
+import os
+import subprocess
 
 DIAGRAM1 = GridWithWeights(10, 10)
 DIAGRAM1.walls = [(1, 7), (1, 8), (2, 7), (2, 8), (3, 7), (3, 8)]
@@ -22,10 +24,34 @@ LEFT = 2
 DOWN = 3
 UP = 1
 
-def change_orientation(no, co)
+def change_orientation(co, no):
     diff = no - co
     if (diff == 1 or diff == 3):
-       # rotate left 
+        # rotate left
+        print("Rotating LEFT!")
+        with open(os.devnull, 'wb') as devnull:
+            subprocess.check_call(['python', 'turn_left.py'], stdout=devnull, stderr=subprocess.STDOUT)
+    elif (diff == -1 or diff == -3):
+        print("Rotating RIGHT!")
+        with open(os.devnull, 'wb') as devnull:
+            subprocess.check_call(['python', 'turn_right.py'], stdout=devnull, stderr=subprocess.STDOUT)
+    # Can only happen during first move
+    elif (diff == 2 or diff == -2):
+        print("Rotating BACKWARDS!")
+        with open(os.devnull, 'wb') as devnull:
+            subprocess.check_call(['python', 'turn_left.py'], stdout=devnull, stderr=subprocess.STDOUT)           
+            subprocess.check_call(['python', 'turn_left.py'], stdout=devnull, stderr=subprocess.STDOUT)
+    else:
+        print("No need for rotation...")
+
+def move_forward():
+    print("Moving FORWARD!")
+    with open(os.devnull, 'wb') as devnull:
+        subprocess.check_call(['python', 'velocity.py', '-51', '45'], stdout=devnull, stderr=subprocess.STDOUT)
+
+def self_localize():
+    print("Self Localising...")
+    subprocess.check_call(['python', 'self_locate.py'])
 
 def main():
     # Solve A* and visualise path
@@ -39,7 +65,9 @@ def main():
     print(path)
 
     # Start following path
+    print("Start following path...")
     cp = path.pop(0) # Get starting position
+    co = DOWN # Assume that starting orientation is down
     while path: # While path_list not empty
         #print(path)
 	np = path.pop(0) # Get next position
@@ -58,8 +86,15 @@ def main():
             no = UP
         else:
             print("Invalid Next Move")
-         
+        change_orientation(co, no)
         cp = np
+        co = no
+        move_forward()
+        self_localize()
+        print("_________________________________")
+        print("End of Step")
+        print("---------------------------------")
+    print("Goal Reached")
 
 if __name__ == "__main__":
     main()

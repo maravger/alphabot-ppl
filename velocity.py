@@ -22,25 +22,25 @@ def main():
     right_speed = int(sys.argv[1])
     left_speed = int(sys.argv[2])
     Ab.setMotor(right_speed,left_speed)
-    while True:
+    #while True:
         
 
-        manager = multiprocessing.Manager()
-        return_dict = manager.dict()
-        jobs = []
+    manager = multiprocessing.Manager()
+    return_dict = manager.dict()
+    jobs = []
 
 
-        p = multiprocessing.Process(target=right_velocity,args=(0, return_dict))
-        jobs.append(p)
-        p.start()
+    p = multiprocessing.Process(target=right_velocity,args=(0, start_time,  return_dict))
+    jobs.append(p)
+    p.start()
         
-        k = multiprocessing.Process(target=left_velocity,args = (1 , return_dict))
-        jobs.append(k)
-        k.start()
+    k = multiprocessing.Process(target=left_velocity,args = (1 , start_time, return_dict))
+    jobs.append(k)
+    k.start()
 
-        p.join()
-        k.join()
-        print ("linear velocity left"+ str(return_dict.values()))
+    p.join()
+    k.join()
+    print ("linear velocity left"+ str(return_dict.values()))
         #print ("linear velocity left"+ str(k))
 
 
@@ -51,12 +51,14 @@ def main():
         #print ("\nright "+ str(u_r))
         #print ("\nleft  " + str(u_l))
         #time.sleep(0.2)
-        end_time = time.time()
-        x = end_time - start_time 
-        time.sleep(1-x)
-        Ab.stop()
+    end_time = time.time()
+    x = end_time - start_time 
+    print str(x)
+    #time.sleep(1-x)
+    Ab.stop()
+    
 
-def right_velocity(procnum, return_dict):
+def right_velocity(procnum, prev_time, return_dict):
     DR = 8
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
@@ -64,8 +66,6 @@ def right_velocity(procnum, return_dict):
     
     prev_status= 0
     changes = 0
-    prev_time = time.time()
-    #print (str(prev_time))
     while True:
         DR_status = GPIO.input(DR)
         if(DR_status == 0):
@@ -79,7 +79,7 @@ def right_velocity(procnum, return_dict):
                     dtime= now_time - prev_time
 
                     prev_time = time.time()
-                    #print (str(dtime))
+                    print (str(dtime))
                     w = 2*pi  / dtime # s^2
                     #print (str(w) + " rad/s")
                     u = R * w # cm
@@ -92,7 +92,7 @@ def right_velocity(procnum, return_dict):
                 prev_status = 1
     #linear_velocity_right = angular_velocity_right * R
 
-def left_velocity(procnum, return_dict):
+def left_velocity(procnum, prev_time, return_dict):
     DR = 7
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
@@ -100,7 +100,6 @@ def left_velocity(procnum, return_dict):
     
     prev_status= 0
     changes = 0
-    prev_time = time.time()
     while True:
         DR_status = GPIO.input(DR)
         if(DR_status == 0):
@@ -111,7 +110,7 @@ def left_velocity(procnum, return_dict):
                     changes =0
                     dtime=float(time.time())-float(prev_time)
                     prev_time = time.time()
-                    #print (str(dtime))
+                    print (str(dtime))
                     w = 2*pi  / dtime # s^2
                     #print (str(w) + " rad/s")
                     u = R * w # cm
