@@ -5,7 +5,7 @@ import cv2
 import math
 
 # initialize the known object width (cm), which in this case is the beacon
-KNOWN_WIDTH = 9.5
+KNOWN_WIDTH = 8.5
 
 # initialize camera-lenses real world distance (cm) from robot centre
 DIST_FROM_CENTRE = 7
@@ -13,10 +13,11 @@ DIST_FROM_CENTRE = 7
 PIC_CENTRE_WIDTH = 1296 # x-centre-coordinate of the 2596x1944 resolution picture
 FOCAL_LENGTH = 4305
 
-# define the list of boundaries (red, blue)
+# define the list of boundaries (red, blue, purple, yellow, orange)
 # IMPORTANT: colour boundaries should be BGR
 COLOR_BOUNDARIES = [
-    [([60, 30, 150], [100, 80, 210])], [([150, 130, 20], [255, 230, 150])]
+        [([60, 30, 150], [100, 80, 210])], [([150, 130, 20], [255, 230, 150])], [([110, 70, 80], [150, 100, 130])], [([10, 130, 130], [120, 200, 220])], [([70, 100, 190], [145, 140, 240])], 
+
 ]
 
 class Dna(object):
@@ -52,10 +53,17 @@ class Dna(object):
     		color += 1
     		prev_pixels = pixels
 
-	if (curr_color == 0):
-    		print("Red Beacon identified!")
-	else:
-    		print("Blue Beacon identified!")
+        if (curr_color == 0):
+            print("Red Beacon identified!")
+        elif (curr_color == 1):
+            print("Blue Beacon identified!")
+        elif (curr_color == 2):
+            print("Purple Beacon identified!")
+        elif (curr_color == 3):
+            print("Yellow Beacon identified!")
+        else:
+            print("Orange Beacon identified!")
+	        
         return curr_cnt
 
     def find_marker(self, image):

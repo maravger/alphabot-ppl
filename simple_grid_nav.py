@@ -60,7 +60,7 @@ class PriorityQueue:
     def get(self):
         return heapq.heappop(self.elements)[1]
 
-class SquareGrid:
+class SquareGrid(object):
     def __init__(self, width, height):
         self.width = width
         self.height = height
@@ -83,7 +83,7 @@ class SquareGrid:
 
 class GridWithWeights(SquareGrid):
     def __init__(self, width, height):
-        super().__init__(width, height)
+        super(GridWithWeights, self).__init__(width, height)
         self.weights = {}
 
     def cost(self, from_node, to_node):
@@ -108,5 +108,5 @@ def draw_tile(graph, id, style, width):
 def draw_grid(graph, width=2, **style):
     for y in range(graph.height):
         for x in range(graph.width):
-            print("%%-%ds" % width % draw_tile(graph, (x, y), style, width), end="")
+            print "%%-%ds" % width % draw_tile(graph, (x, y), style, width),
         print()

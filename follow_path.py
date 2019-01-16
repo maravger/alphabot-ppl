@@ -49,9 +49,10 @@ def move_forward():
     with open(os.devnull, 'wb') as devnull:
         subprocess.check_call(['python', 'velocity.py', '-51', '45'], stdout=devnull, stderr=subprocess.STDOUT)
 
-def self_localize():
+def self_localize(move):
     print("Self Localising...")
-    subprocess.check_call(['python', 'self_locate.py'])
+    distance = str(move*25)
+    subprocess.check_call(['python', 'self_locate.py', '-d', distance])
 
 def main():
     # Solve A* and visualise path
@@ -68,7 +69,9 @@ def main():
     print("Start following path...")
     cp = path.pop(0) # Get starting position
     co = DOWN # Assume that starting orientation is down
+    move = 0
     while path: # While path_list not empty
+        move += 1 
         #print(path)
 	np = path.pop(0) # Get next position
 	# Define new orientation
@@ -90,7 +93,7 @@ def main():
         cp = np
         co = no
         move_forward()
-        self_localize()
+        self_localize(move)
         print("_________________________________")
         print("End of Step")
         print("---------------------------------")
