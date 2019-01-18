@@ -15,55 +15,96 @@ FOCAL_LENGTH = 4305
 
 # define the list of boundaries (red, blue, purple, yellow, orange)
 # IMPORTANT: colour boundaries should be BGR
-COLOR_BOUNDARIES = [
-        [([60, 30, 150], [100, 80, 210])], [([150, 130, 20], [255, 230, 150])], [([110, 70, 80], [150, 100, 130])], [([10, 130, 130], [120, 200, 220])], [([70, 100, 190], [145, 140, 240])], 
 
+COLOR_BOUNDARIES = [
+    [([70, 60, 200], [150, 110, 250])], 
+    [([160, 130, 0], [210, 180, 60])], 
+    [([95, 80, 95], [130, 110 , 120])], 
+    [([100, 220, 230], [170, 250, 250])], 
+    [([70, 100, 190], [145, 140, 240])], 
 ]
 
 class Dna(object):
     def detect_color(self, image):
-        # 0 = pink, 1 = green 
-        color = 0
-        prev_pixels = 0
-
+	color = 0
+	curr_width = 0	
 	# loop over the boundaries, find the most fitting color 
 	for boundaries in COLOR_BOUNDARIES:
+		print("")
+    		if (color == 0):
+        		print("Looking for the Red Beacon...")
+    		elif (color == 1):
+        		print("Looking for the Blue Beacon...")
+    		elif (color == 2):
+        		print("Looking for the Purple Beacon...")
+    		elif (color == 3):
+        		print("Looking for the Yellow Beacon...")
+    		else:
+        		print("Looking for the Orange Beacon...")		
     		for (lower, upper) in boundaries:
-        		# create NumPy arrays from the boundaries
+			# create NumPy arrays from the boundaries
         		lower = np.array(lower, dtype = "uint8")
         		upper = np.array(upper, dtype = "uint8") 
         		# find the colors within the specified boundaries and apply
         		# the mask
         		mask = cv2.inRange(image, lower, upper)
-        		mask_lists = mask.tolist()
-        		pixels = sum(x > 0 for lis in mask_lists for x in lis)
-                        
+        		mask_lists = mask.tolist()                       
+ 
                         try:
-        		    # find contour based on colour
-        		    cnts = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        		    cnts = imutils.grab_contours(cnts)
-        		    c = max(cnts, key = cv2.contourArea) 
+				# find contour based on colour
+        		    	cnts = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        		    	cnts = imutils.grab_contours(cnts)
+        		    	c = max(cnts, key = cv2.contourArea)
+			    	marker = cv2.minAreaRect(c)
+
+			    	# Always looking for cylinders sitting on their bottom
+            		    	if (marker[1][0] < marker[1][1]): 
+                	    		width = marker[1][0]
+                			height = marker[1][1]
+                			angle = marker[2]
+            			else:
+                			# Cannot be sitting on their side
+                			raise ValueError
+            			print("Candidate contour width, height and angle:")
+            			print width,height,angle
+            
+            			# Check if feasible beacon marker
+            			# 1: width to height ratio must be within the range of [0.37, 0.43]
+            			if not((width/height >= 0.37) and (width/height <= 0.43)):
+                			raise ValueError
+            			# 2: angle must be within the range of [-5, 5]
+            			elif not(angle >= -5 and angle <= 5):
+                			raise ValueError 
 			
-        		    if (pixels >= prev_pixels):
-            			curr_color = color
-                                curr_cnt = c
                         except ValueError:
-                            print('0 pixels of this colour found!')
+				print('Not found!')
+            			continue	
+			if (width > curr_width):
+            			curr_color = color
+            			curr_width = width
+				curr_cnt = c			
 
     		color += 1
-    		prev_pixels = pixels
 
-        if (curr_color == 0):
-            print("Red Beacon identified!")
-        elif (curr_color == 1):
-            print("Blue Beacon identified!")
-        elif (curr_color == 2):
-            print("Purple Beacon identified!")
-        elif (curr_color == 3):
-            print("Yellow Beacon identified!")
-        else:
-            print("Orange Beacon identified!")
-	        
+	if not(curr_width == 0):
+    		cms = self.find_distance(KNOWN_WIDTH, FOCAL_LENGTH, curr_width, DIST_FROM_CENTRE)
+	else:
+    		print "\nNo Beacon detected!"
+    		exit()
+
+	print("Calculated Distance: %.2f cm" % cms)
+
+	if (curr_color == 0):
+    		print("Red Beacon identified!")
+	elif (curr_color == 1):
+    		print("Blue Beacon identified!")
+	elif (curr_color == 2):
+    		print("Purple Beacon identified!")
+	elif (curr_color == 3):
+    		print("Yellow Beacon identified!")
+	else:
+    		print("Orange Beacon identified!")	
+        
         return curr_cnt
 
     def find_marker(self, image):
