@@ -3,6 +3,7 @@ import numpy as np
 import imutils
 import cv2
 import math
+from not_found_error import *
 
 # initialize the known object width (cm), which in this case is the beacon
 KNOWN_WIDTH = 8.5
@@ -15,7 +16,6 @@ FOCAL_LENGTH = 4305
 
 # define the list of boundaries (red, blue, purple, yellow, orange)
 # IMPORTANT: colour boundaries should be BGR
-
 COLOR_BOUNDARIES = [
     [([70, 60, 200], [150, 110, 250])], 
     [([160, 130, 0], [210, 180, 60])], 
@@ -90,6 +90,7 @@ class Dna(object):
     		cms = self.find_distance(KNOWN_WIDTH, FOCAL_LENGTH, curr_width, DIST_FROM_CENTRE)
 	else:
     		print "\nNo Beacon detected!"
+                raise NotFoundError
     		exit()
 
 	print("Calculated Distance: %.2f cm" % cms)
@@ -148,3 +149,5 @@ class Dna(object):
         angle = self.find_angle(contour, cms)
         print("Calculated Distance: %.2f cm" % cms)
         print("Calculated Angle: %.2f Deg" % math.degrees(angle))
+
+        return cms, math.degrees(angle)
