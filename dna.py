@@ -14,18 +14,20 @@ DIST_FROM_CENTRE = 7
 PIC_CENTRE_WIDTH = 1296 # x-centre-coordinate of the 2596x1944 resolution picture
 FOCAL_LENGTH = 4305
 
-# define the list of boundaries (red, blue, purple, yellow, orange)
-# IMPORTANT: colour boundaries should be BGR
+# define the list of HSV boundaries (red, blue, purple, yellow, orange)
+# IMPORTANT: colour boundaries should be in HSV: H (0-180) | S (0-255) | V (0-255)
 COLOR_BOUNDARIES = [
-    [([70, 60, 200], [150, 110, 250])], 
-    [([160, 130, 0], [210, 180, 60])], 
-    [([95, 80, 95], [130, 110 , 120])], 
-    [([100, 220, 230], [170, 250, 250])], 
-    [([70, 100, 190], [145, 140, 240])], 
+    [([110, 140, 115], [180, 200, 200])], 
+    [([80, 100, 100], [110, 255, 255])], 
+    [([125, 10, 50], [160, 65 , 155])], 
+    [([20, 110, 125], [35, 255, 230])], 
+    [([5, 85, 100], [20, 230, 255])], 
 ]
 
 class Dna(object):
     def detect_color(self, image):
+        # transfer to HSV colour space
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 	color = 0
 	curr_width = 0	
 	# loop over the boundaries, find the most fitting color 
@@ -48,11 +50,13 @@ class Dna(object):
         		# find the colors within the specified boundaries and apply
         		# the mask
         		mask = cv2.inRange(image, lower, upper)
-        		mask_lists = mask.tolist()                       
+                        # If searching for red, combine masks
+                        if (color == 0):
+                            mask = mask | cv2.inRange(image, np.array([0, 140, 115]), np.array([20, 200, 200]))
  
                         try:
 				# find contour based on colour
-        		    	cnts = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        	                cnts = cv2.findContours(mask.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         		    	cnts = imutils.grab_contours(cnts)
         		    	c = max(cnts, key = cv2.contourArea)
 			    	marker = cv2.minAreaRect(c)
@@ -69,8 +73,8 @@ class Dna(object):
             			print width,height,angle
             
             			# Check if feasible beacon marker
-            			# 1: width to height ratio must be within the range of [0.37, 0.43]
-            			if not((width/height >= 0.37) and (width/height <= 0.43)):
+            			# 1: width to height ratio must be within the range of [0.37, 0.45]
+            			if not((width/height >= 0.37) and (width/height <= 0.45)):
                 			raise ValueError
             			# 2: angle must be within the range of [-5, 5]
             			elif not(angle >= -5 and angle <= 5):
@@ -86,14 +90,11 @@ class Dna(object):
 
     		color += 1
 
-	if not(curr_width == 0):
-    		cms = self.find_distance(KNOWN_WIDTH, FOCAL_LENGTH, curr_width, DIST_FROM_CENTRE)
-	else:
-    		print "\nNo Beacon detected!"
-                raise NotFoundError
-    		exit()
+	if (curr_width == 0):
+    	    print "\nNo Beacon detected!"
+            raise NotFoundError
+    	    exit()
 
-	print("Calculated Distance: %.2f cm" % cms)
 
 	if (curr_color == 0):
     		print("Red Beacon identified!")
@@ -106,14 +107,14 @@ class Dna(object):
 	else:
     		print("Orange Beacon identified!")	
         
-        return curr_cnt
+        return curr_cnt, curr_color
 
     def find_marker(self, image):
         # detect the beacon color and the respective contour based on it
-        c = self.detect_color(image)   
+        cnt, color = self.detect_color(image)   
         
         # compute the bounding box of the of the color region and return it 
-        return (cv2.minAreaRect(c), c)
+        return (cv2.minAreaRect(cnt), cnt, color)
 
     def find_angle(self, cnt, distance):
         # Find left extreme point
@@ -144,10 +145,11 @@ class Dna(object):
         # load the image, find the marker in the image, then compute the
         # distance to the marker from the camera
         image = cv2.imread(imagePath)
-        marker, contour = self.find_marker(image)
+        marker, contour, color = self.find_marker(image)
         cms = self.find_distance(KNOWN_WIDTH, FOCAL_LENGTH, marker[1][0], DIST_FROM_CENTRE)
         angle = self.find_angle(contour, cms)
         print("Calculated Distance: %.2f cm" % cms)
         print("Calculated Angle: %.2f Deg" % math.degrees(angle))
+        print("Color Code: " + str(color))
 
-        return cms, math.degrees(angle)
+        return cms, math.degrees(angle), color 

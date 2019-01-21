@@ -20,22 +20,29 @@ camera.resolution = (2592, 1944)
 beacons_found = 0
 pulse_width = 2650
 step = 300 # 300ms ~= 30Deg
+distance = []
+angle = []
+color = []
 
 # Distance and angle from at least 2 Beacons is needed for accurate localisation
-while (beacons_found < 2):
+while ((beacons_found < 2) and (pulse_width >= 900)):
     # Scan area with a 30-angle step
     pulse_width -= step
     with open(os.devnull, 'wb') as devnull:
-        subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', '27', '-w', pulse_width], stdout=devnull, stderr=subprocess.STDOUT)
+        subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', '27', '-w', str(pulse_width)], stdout=devnull, stderr=subprocess.STDOUT)
     sleep(1)
-    candidate = open('candidate.jpg', 'wb')
+    candidate = open('candidate'+str(pulse_width)+'.jpg', 'wb')
     camera.capture(candidate)
     candidate.close()
     try:
-        distance, angle = Dna.find_distance_and_angle('candidate.jpg')
+        d, a, c = Dna.find_distance_and_angle('candidate'+str(pulse_width)+'.jpg')
+        distance.append(d)
+        angle.append(a)
+        color.append(c)
         beacons_found += 1
-        print("\n")
+        print("Beacons found: " + str(beacons_found))
     except NotFoundError:
         continue
 
 print("-------------------------------")
+print distance, angle, color
