@@ -39,7 +39,7 @@ while ((beacons_found < 2) and (pulse_width >= 900)):
         # Check for already-found color
         if c not in color:
             distance.append(d)
-            angle.append(a)
+            angle.append((pulse_width-1650)/11.11 - a)
             color.append(c)
             beacons_found += 1
             print("Beacons found: " + str(beacons_found))

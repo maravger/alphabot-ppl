@@ -82,11 +82,13 @@ class Dna(object):
 			
                         except ValueError:
 				print('Not found!')
+                                width = 0
             			continue	
-			if (width > curr_width):
-            			curr_color = color
-            			curr_width = width
-				curr_cnt = c			
+		if (width > curr_width):
+            		curr_color = color
+            		curr_width = width
+			curr_cnt = c
+                        break
 
     		color += 1
 
@@ -97,15 +99,15 @@ class Dna(object):
 
 
 	if (curr_color == 0):
-    		print("Red Beacon identified!")
+    		print("\nRed Beacon identified!")
 	elif (curr_color == 1):
-    		print("Blue Beacon identified!")
+    		print("\nBlue Beacon identified!")
 	elif (curr_color == 2):
-    		print("Purple Beacon identified!")
+    		print("\nPurple Beacon identified!")
 	elif (curr_color == 3):
-    		print("Yellow Beacon identified!")
+    		print("\nYellow Beacon identified!")
 	else:
-    		print("Orange Beacon identified!")	
+    		print("\nOrange Beacon identified!")	
         
         return curr_cnt, curr_color
 
