@@ -36,13 +36,22 @@ while ((beacons_found < 2) and (pulse_width >= 900)):
     candidate.close()
     try:
         d, a, c = Dna.find_distance_and_angle('candidate'+str(pulse_width)+'.jpg')
-        distance.append(d)
-        angle.append(a)
-        color.append(c)
-        beacons_found += 1
-        print("Beacons found: " + str(beacons_found))
+        # Check for already-found color
+        if c not in color:
+            distance.append(d)
+            angle.append(a)
+            color.append(c)
+            beacons_found += 1
+            print("Beacons found: " + str(beacons_found))
+        else:
+            print("Beacon already found, not updating")
+        print("-------------------------------\n")
     except NotFoundError:
         continue
 
 print("-------------------------------")
 print distance, angle, color
+# Straigthen camera's position before exiting
+with open(os.devnull, 'wb') as devnull:
+        subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', '27', '-w', '1600'], stdout=devnull, stderr=subprocess.STDOUT)
+

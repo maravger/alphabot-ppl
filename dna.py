@@ -17,10 +17,10 @@ FOCAL_LENGTH = 4305
 # define the list of HSV boundaries (red, blue, purple, yellow, orange)
 # IMPORTANT: colour boundaries should be in HSV: H (0-180) | S (0-255) | V (0-255)
 COLOR_BOUNDARIES = [
-    [([110, 140, 115], [180, 200, 200])], 
+    [([110, 120, 115], [180, 200, 255])], 
     [([80, 100, 100], [110, 255, 255])], 
     [([125, 10, 50], [160, 65 , 155])], 
-    [([20, 110, 125], [35, 255, 230])], 
+    [([20, 75, 125], [35, 255, 255])], 
     [([5, 85, 100], [20, 230, 255])], 
 ]
 

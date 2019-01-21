@@ -7,7 +7,7 @@ from AlphaBot import AlphaBot
 import multiprocessing
 
 R = 0.034 # wheel radius (m) 6,6 cm 
-T = 0.5
+T = 0.3
 r = 0.0165  #wood wheel radious
 L = 0.132   # distance between  wheels 
 Ab = AlphaBot()
@@ -43,7 +43,7 @@ class MicroControler(object) :
         yref = a[4]
         fref = a[5]
         orientation = 0 
-        dt = 0.2
+        dt = T
         while((fabs(xref-xo) >= fabs(xref)*e) or (fabs(fref-fo) >= 0.1)): #yo) >= yref*e)  
             # set velocities to reach xref,yref,fref
             # prwta peristrofikh meta metaforikh
@@ -119,11 +119,10 @@ class MicroControler(object) :
             #print ("right voltage :" + str(right_voltage) , "left_voltage "+ str(left_voltage))
 
 
-
             #print ("apostasi apo stoxo se cm: "+str(fabs(xref-xo)) )
             #kinisi
 
-            #print (str(right_voltage) , str(left_voltage))
+            #p1rint (str(right_voltage) , str(left_voltage))
             Ab.setMotor(left_voltage,right_voltage)
         
             #fork processes and grab results after T 
@@ -153,7 +152,7 @@ class MicroControler(object) :
                 print ("error1")
                 #wr = pi /(10 * T)  
                 wr = 0 
-                dt =0
+                dtr =0
                 counter = counter -1 
             try:
                 wl = return_dict[1]
@@ -161,12 +160,12 @@ class MicroControler(object) :
             except: 
                 print ("error2")
                 wl = pi / (10 * T) * 2 
-                wl = 0 
+                #wl = 0 
                 counter = counter -1 
                 dtl = 0
             if counter != 0 :
                 dt = (dtl+dtr)/counter
-            else : dt = 0.2 
+            else : dt = T 
 
         
         #calculate new xo,yo,fo
