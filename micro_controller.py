@@ -7,13 +7,12 @@ from AlphaBot import AlphaBot
 import multiprocessing
 
 R = 0.034 # wheel radius (m) 6,6 cm 
-T = 0.4
+T = 0.5
 r = 0.0165  #wood wheel radious
 L = 0.132   # distance between  wheels 
 Ab = AlphaBot()
-e = 0.1
-vmax = 100
-vmin= 60
+vmax = 60
+vmin= 35
 
 #for wr the equation for voltage is v = (wr - B)/ A
 A = 0.16136027
@@ -43,27 +42,33 @@ class MicroControler(object) :
         yref = a[4]
         fref = a[5]
         orientation = 0 
-        dt = T
         rotational = 0 
+        e = 0.1
         
-        '''
+        
         if fref!=fo:
-            print ("rotational move")
-            if 0.5236 -e <= fref-fo <= 0.5236 + e : 
-                Ab.setMotor(-40,-40)
-                time.sleep(0.25)
-                Ab.stop()
+            #print ("rotational move")
+            #if 0.5236 -e <= fref-fo <= 0.5236 + e : 
+            #    Ab.setMotor(-40,-40)
+            #    time.sleep(0.25)
+            #    Ab.stop()
             rotational = 1
-        '''
+            e= 0.15
+
+        
+        counter = 2
         while((fabs(xref-xo) >= fabs(xref)*e) or (fabs(fref-fo) >= 0.1)) : #yo) >= yref*e)  
             dt = T 
-            if rotational == 1: break ;
+
             # set velocities to reach xref,yref,fref
             # prwta peristrofikh meta metaforikh
-            if (fabs(fref-fo) >= 0.15):
-
-                w= (fref-fo)*L/(2*R*T/4) # xronos misos diplasio w
-                dt = dt / 4
+            if (fabs(fref-fo) >= e):
+                if counter < 2 and rotational == 1:
+                    dt = dt/ 5 
+                else :
+                    dt = dt / 5  
+                print ("error sth gwnia " + str(fabs(fref-fo)))
+                w= (fref-fo)*L/(2*R*dt) # xronos misos diplasio w
                 #print ("gwnia problhma")
                 print ("w PERISTROFI MONTELO rad/sec: "+str(w))
                 #Ab.stop()
@@ -72,38 +77,39 @@ class MicroControler(object) :
                 left_voltage =  (w - D)/C
                 print ("right_voltage: "+str(right_voltage)+ "left_voltage: "+str(left_voltage))
                 
-                if (-vmin < right_voltage < 0) : right_voltage = vmin
-                if (right_voltage < - vmax) : right_voltage = vmax
-                if (0 <= right_voltage <  vmin) : right_voltage = vmin
+                if (-vmin < right_voltage < 0) : right_voltage = - vmin# + 10 
+                if (right_voltage < - vmax) : right_voltage = - vmax
+                if (0 <= right_voltage <  vmin) : right_voltage = vmin 
                 if (right_voltage > vmax) : right_voltage = vmax
-                if (-vmin < left_voltage < 0) : left_voltage = vmin
-                if (left_voltage < - vmax) : left_voltage = vmax
+                if (-vmin < left_voltage < 0) : left_voltage = - vmin
+                if (left_voltage < - vmax) : left_voltage = - vmax
                 if (0 <= left_voltage <  vmin) : left_voltage = vmin
                 if (left_voltage > vmax) : left_voltage = vmax
                 
                 #left_voltage = vmin  
                 #right_voltage = vmin  
-                if w < 0:  #prepei na stripsw pros ta deksia
+                if w < 0:  #prepei na stripsw pros ta deksia ( + , + ) 
                     orientation = 2
-                    right_voltage= right_voltage
-                    left_voltage= left_voltage
+                    right_voltage= -right_voltage
+                    left_voltage= -left_voltage
 
 
-                else: # prepei na stripsw pros ta aristera
+                else: # prepei na stripsw pros ta aristera ( - , - )
                     orientation = 3
                     right_voltage= -right_voltage
-                    left_voltage=-left_voltage
+                    left_voltage= -left_voltage
 
 
                 #print ("apoklisi gwnias se rad: "+str(fref-fo))
                 print ("w PERISTROFI rad/sec: "+str(w)+ " orientation: "+str(orientation))
-                print ("right_voltage: "+str(right_voltage)+ "left_voltage: "+str(left_voltage))
+                print ("right_voltage: "+str(right_voltage)+ " left_voltage: "+str(left_voltage))
                 #print str(w)
             
             
             
             
-            elif (fabs(xref-xo)>=fabs(xref*e)):
+            elif (fabs(xref-xo)>=fabs(xref*0.1)):
+                print ("metaforiki kinhsh")
                 w = (xref-xo)/(R*dt)
                 #print ("w rad/sec: "+str(w))
                 right_voltage = (w - B)/A
@@ -119,16 +125,13 @@ class MicroControler(object) :
                 if (left_voltage > vmax) : left_voltage = vmax
                 
                 
-               
-                right_voltage = right_voltage 
-                left_voltage = -left_voltage
-                if w<0:
-                    right_voltage = right_voltage 
-                    left_voltage = left_voltage
+                orientation = 0 
+                right_voltage = -right_voltage # an w > 0 tote prepei na paw eutheia ara ( - , + )
+                left_voltage = +left_voltage
+                if w<0:         # an w < 0 tote prepei na paw opisthen ara ( + , - )            
+                    right_voltage = -right_voltage 
+                    left_voltage =  -left_voltage
                     orientation = 1 
-                else: 
-                    orientation = 0
-                
               
                # print ("w rad/sec: "+str(w))
             else : 
@@ -139,12 +142,11 @@ class MicroControler(object) :
 
 
             #print ("apostasi apo stoxo se cm: "+str(fabs(xref-xo)) )
-            #kinisi
 
             #p1rint (str(right_voltage) , str(left_voltage))
-            Ab.setMotor(left_voltage,right_voltage)
+            Ab.setMotor(right_voltage, left_voltage) # PRWTA RIGHT META LEFT !!! EINAI ANAPODA STHN SETMOTOR
         
-            #fork processes and grab results after T 
+            #fork processes and grab results after dt
             manager = multiprocessing.Manager()
             return_dict = manager.dict()
             jobs = []
@@ -156,17 +158,26 @@ class MicroControler(object) :
             jobs.append(k)
             k.daemon=True
             k.start()
-
             time.sleep(dt)
             p.terminate()
             k.terminate()
             p.join(T)       
             k.join(T)
-            #print ("velocities and time: right-left: "+ str(return_dict.values()))
+            
+            # try to grab measurements
             counter = 2
             try:
                 wr = return_dict[0]
                 dtr = return_dict[2]
+
+                #right_voltage = (wr - B)/A
+                
+                #if (-vmin < right_voltage < 0) : right_voltage = -vmin
+                #if (right_voltage < - vmax) : right_voltage = -vmax
+                #if (0 <= right_voltage <  vmin) : right_voltage = vmin
+                #if (right_voltage > vmax) : right_voltage = vmax
+                #wr = right_voltage* A + B 
+
             except: 
                 print ("error1")
                 #wr = pi /(10 * T)  
@@ -176,33 +187,43 @@ class MicroControler(object) :
             try:
                 wl = return_dict[1]
                 dtl = return_dict[3]
+                #left_voltage =  (wl - D)/C
+
+                #if (-vmin < left_voltage < 0) : left_voltage = -vmin
+                #if (left_voltage < - vmax) : left_voltage = -vmax
+                #if (0 <= left_voltage <  vmin) : left_voltage = vmin
+                #if (left_voltage > vmax) : left_voltage = vmax
+                #wl = left_voltage*C + D
+
             except: 
                 print ("error2")
                 #wl = pi / (10 * T) * 2 
                 wl = 0 
                 counter = counter -1 
                 dtl = 0
-            if counter != 0 :
-                print ("dt = 0 ")
-              #  dt = (dtl+dtr)/counter
+            if counter == 2 :
+                print ("dt: "+str(dt))
+                dt = (dtl+dtr)/counter
+                print ("dt: "+str(dt))
             else : dt = dt 
 
         
         #calculate new xo,yo,fo
             
-            if orientation == 3: 
-                wr = +wr 
-                wl = -wl
+            if orientation == 3: # tou eipa na stripsei aristera epitopou 
+                wr = wr    # eixa paei prin deksia sta - kai twra thelw na paw aristera sta +
+                wl = -wl   # ara wr - wl prepei na einai thetiko 
+                
 
-            if orientation == 2:
-                wr = -wr
-                wl = wl 
+            if orientation == 2: # tou eipa na stripsei deksia epitopou
+                wr = -wr   # eixa paei prin aristera sta + kai twra thelw na paw deksia sta -  
+                wl =  wl   # ara wr-wl  prepei na einai arnhtiko 
+
             
-            print ("measured  wr , wl , dt ,  previous f0 : "+str(wr) , str(wl), str(dt), str(fo))
             fo = fo + dt * R*(wr-wl)/L
+            print ("measured  wr , wl , dt , f0 : "+str(wr) , str(wl), str(dt), str(fo))
             
-            
-            if fo > 2*pi : fo = fo - 2*pi
+            if fo > 2*pi : fo = fo - 2*pi    # estw oti exw kanei kuklo mhdenise
             if fo < -2*pi : fo = fo + 2*pi
             
             

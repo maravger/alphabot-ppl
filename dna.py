@@ -73,8 +73,11 @@ class Dna(object):
             			print width,height,angle
             
             			# Check if feasible beacon marker
-            			# 1: width to height ratio must be within the range of [0.37, 0.45]
-            			if not((width/height >= 0.37) and (width/height <= 0.45)):
+                                # 0: (WEAK) width must be greater than 100 pixels
+                                if not(width >= 100):
+                                        raise ValueError
+                                # 1: width to height ratio must be within the range of [0.37, 0.45]
+            			elif not((width/height >= 0.37) and (width/height <= 0.45)):
                 			raise ValueError
             			# 2: angle must be within the range of [-5, 5]
             			elif not(angle >= -5 and angle <= 5):
