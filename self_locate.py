@@ -40,8 +40,8 @@ class SelfLocator():
                     d, a, c = Dna.find_distance_and_angle('candidate'+str(pulse_width)+'.jpg')
                     # Check for already-found color
                     if c not in color:
-                        distance.append(d)
-                        angle.append((pulse_width-1650)/11.11 - a)
+                        distance.append(round(d, 2))
+                        angle.append(round((pulse_width-1650)/11.11 - a, 2))
                         color.append(c)
                         beacons_found += 1
                         print("Beacons found: " + str(beacons_found))

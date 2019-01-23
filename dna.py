@@ -70,7 +70,7 @@ class Dna(object):
                 			# Cannot be sitting on their side
                 			raise ValueError
             			print("Candidate contour width, height and angle:")
-            			print width,height,angle
+            			print round(width), round(height), round(angle, 2)
             
             			# Check if feasible beacon marker
                                 # 0: (WEAK) width must be greater than 100 pixels

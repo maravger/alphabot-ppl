@@ -3,6 +3,8 @@ import os
 import subprocess
 from self_locate import *
 
+DIAGRAM1_S = (1,4)
+DIAGRAM1_G = (7,8)
 DIAGRAM1 = GridWithWeights(10, 10)
 DIAGRAM1.walls = [(1, 7), (1, 8), (2, 7), (2, 8), (3, 7), (3, 8)]
 DIAGRAM1.weights = {loc: 5 for loc in [(3, 4), (3, 5), (4, 1), (4, 2),
@@ -16,18 +18,17 @@ DIAGRAM1.weights = {loc: 5 for loc in [(3, 4), (3, 5), (4, 1), (4, 2),
 GRID_COLUMNS = 5
 GRID_ROWS = 5
 
-BEACON_COLORS = [0, 1, 2, 3, 4]
+# BEACON_COLORS = [0, 1, 2, 3, 4]
 BEACON_COLUMNS = [2, 4, 0, 4, 0]
 BEACON_ROWS = [4, 2, 4, 4, 2]
 CELL_SIZE = 50
 
-DIAGRAM1_S = (1,4)
-DIAGRAM1_G = (7,8)
-
 DIAGRAM2 = GridWithWeights(GRID_COLUMNS, GRID_ROWS)
-DIAGRAM2_S = (2,0)
-DIAGRAM2_G = (2,3)
+DIAGRAM2_S = (2,0) # Start
+DIAGRAM2_G = (2,3) # Goal
+ORIENT_REF_POINT = (2,4) # Red Beacon
 
+# Encode Moveset
 RIGHT = 4
 LEFT = 2
 DOWN = 3
@@ -58,13 +59,41 @@ def move_forward():
     with open(os.devnull, 'wb') as devnull:
         subprocess.check_call(['python', 'velocity.py', '-51', '45'], stdout=devnull, stderr=subprocess.STDOUT)
 
+# Return estimated AlphaBot's position in grid (column, row, orientation)
 def self_localize(self_locator):
     print("Self Localising...")
-    distance, angle, color = self_locator.dna_from_beacons()
-    c, r = detect_position_in_grid(distance, color)
-    print c,r
-    return c, r
+    b_distance, b_angle, b_color = self_locator.dna_from_beacons()
+    x, y, column, row = detect_position_in_grid(b_distance, b_color)
+    orientation = detect_orientation(x, y, b_distance[0], b_angle[0], b_color[0]) # angle from the first beacon is enough
+    print column, row, orientation
+    return column, row, orientation
 
+# Detect AlphaBot's orientation (degrees) relevant to a reference point in grid
+def detect_orientation(ax, ay, distance, theta_beac, color):
+    rx = ORIENT_REF_POINT[1] * CELL_SIZE + CELL_SIZE / 2
+    ry = ORIENT_REF_POINT[0] * CELL_SIZE + CELL_SIZE / 2
+    bx = BEACON_ROWS[color] * CELL_SIZE + CELL_SIZE / 2
+    by = BEACON_COLUMNS[color] * CELL_SIZE + CELL_SIZE / 2 
+
+    # beacon - alphabot distance
+    bad = round(distance)
+    print("Beacon - AlphaBot distance: " + str(bad))
+    # beacon - ref distance
+    brd = round(math.sqrt((bx - rx) ** 2 + (by - ry) ** 2))
+    print("Beacon - Reference Point distance: " + str(brd))
+    # alphabot - ref distance
+    ard = round(math.sqrt((ax - rx) ** 2 + (ay - ry) ** 2))
+    print("AlphaBot - Reference Point distance: " + str(ard))
+
+    # Cosine Rule
+    a = round(math.degrees(math.acos((bad ** 2 + ard ** 2 - brd ** 2) / (2 * bad * ard))), 2)
+    print("Cosine Rule Angle: " + str(a))
+    theta_or = theta_beac - a
+    print("Orientation Angle: " + str(theta_or))
+
+    return theta_or
+
+# Detect AlphaBot's position in grid (columns, rows)
 def detect_position_in_grid(distance, color):
     r0 = distance[0]
     print("R0 = " + str(r0))
@@ -85,13 +114,13 @@ def detect_position_in_grid(distance, color):
     h = math.sqrt(r0 ** 2 - a ** 2)
     x2 = x0 + a * (x1 - x0) / d   
     y2 = y0 + a * (y1 - y0) / d   
-    x3a = x2 + h * (y1 - y0) / d     
+    x3a = round(x2 + h * (y1 - y0) / d, 2)     
     print("IP1 x = " + str(x3a))
-    x3b = x2 - h * (y1 - y0) / d
+    x3b = round(x2 - h * (y1 - y0) / d, 2)
     print("IP2 x = " + str(x3b))
-    y3a = y2 - h * (x1 - x0) / d
+    y3a = round(y2 - h * (x1 - x0) / d, 2)
     print("IP1 y = " + str(y3a))
-    y3b = y2 + h * (x1 - x0) / d
+    y3b = round(y2 + h * (x1 - x0) / d, 2)
     print("IP2 y = " + str(y3b))
 
     if ((x3a > GRID_ROWS*CELL_SIZE) or (y3a > GRID_COLUMNS*CELL_SIZE)):   
@@ -112,7 +141,7 @@ def detect_position_in_grid(distance, color):
     row = x3 // CELL_SIZE
     column = y3 // CELL_SIZE
     
-    return column, row
+    return x3, y3, column, row
 
 def main():
     sl = SelfLocator(300)
@@ -133,7 +162,6 @@ def main():
     move = 0
     while path: # While path_list not empty
         move += 1 
-        #print(path)
 	np = path.pop(0) # Get next position
 	# Define new orientation
         if (np[0] - cp[0] == 1): # => no = RIGHT
@@ -154,7 +182,7 @@ def main():
         cp = np
         co = no
         # move_forward()
-        self_localize(sl)
+        column, row, orientation = self_localize(sl)
         print("_________________________________")
         print("End of Step")
         print("---------------------------------")

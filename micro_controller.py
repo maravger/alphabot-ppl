@@ -11,8 +11,8 @@ T = 0.5
 r = 0.0165  #wood wheel radious
 L = 0.132   # distance between  wheels 
 Ab = AlphaBot()
-vmax = 60
-vmin= 35
+vmax = 80
+vmin= 45
 
 #for wr the equation for voltage is v = (wr - B)/ A
 A = 0.16136027
@@ -33,7 +33,7 @@ class MicroControler(object) :
 
     def move_and_control(self, a):
         start_time = time.time()
-         
+        T = 0.5 
         reference_position = a
         xo = a[0]
         yo = a[1]
@@ -47,26 +47,34 @@ class MicroControler(object) :
         
         
         if fref!=fo:
-            #print ("rotational move")
+            print ("rotational move")
             #if 0.5236 -e <= fref-fo <= 0.5236 + e : 
             #    Ab.setMotor(-40,-40)
             #    time.sleep(0.25)
             #    Ab.stop()
             rotational = 1
             e= 0.15
+            T = 0.6
 
         
         counter = 2
+        moves = 0 
         while((fabs(xref-xo) >= fabs(xref)*e) or (fabs(fref-fo) >= 0.1)) : #yo) >= yref*e)  
             dt = T 
-
+            c = 0 
+            moves += 1
             # set velocities to reach xref,yref,fref
             # prwta peristrofikh meta metaforikh
             if (fabs(fref-fo) >= e):
-                if counter < 2 and rotational == 1:
+                if rotational == 1 and moves > 1:
                     dt = dt/ 5 
-                else :
-                    dt = dt / 5  
+                elif rotational ==0:
+                    dt = dt / 5 
+                print ("dt : " + str(dt))
+                # fix errors of not measuring wr,wl
+                if c > 0:
+                    dt = dt /8
+                    c = 0
                 print ("error sth gwnia " + str(fabs(fref-fo)))
                 w= (fref-fo)*L/(2*R*dt) # xronos misos diplasio w
                 #print ("gwnia problhma")
@@ -75,7 +83,7 @@ class MicroControler(object) :
                 #time.sleep(4)
                 right_voltage = (w - B)/A
                 left_voltage =  (w - D)/C
-                print ("right_voltage: "+str(right_voltage)+ "left_voltage: "+str(left_voltage))
+                print ("right_voltage: "+str(right_voltage)+ " left_voltage: "+str(left_voltage))
                 
                 if (-vmin < right_voltage < 0) : right_voltage = - vmin# + 10 
                 if (right_voltage < - vmax) : right_voltage = - vmax
@@ -108,7 +116,7 @@ class MicroControler(object) :
             
             
             
-            elif (fabs(xref-xo)>=fabs(xref*0.1)):
+            elif (fabs(xref-xo)>=fabs(xref*0.1) and (rotational!= 1)):
                 print ("metaforiki kinhsh")
                 w = (xref-xo)/(R*dt)
                 #print ("w rad/sec: "+str(w))
@@ -205,7 +213,9 @@ class MicroControler(object) :
                 print ("dt: "+str(dt))
                 dt = (dtl+dtr)/counter
                 print ("dt: "+str(dt))
-            else : dt = dt 
+            else :
+                dt = dt 
+                c +=1
 
         
         #calculate new xo,yo,fo
