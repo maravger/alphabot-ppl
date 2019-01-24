@@ -34,11 +34,11 @@ class SelfLocator():
                 with open(os.devnull, 'wb') as devnull:
                     subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', '27', '-w', str(pulse_width)], stdout=devnull, stderr=subprocess.STDOUT)
                 sleep(1)
-                candidate = open('candidate'+str(pulse_width)+'.jpg', 'wb')
+                candidate = open('images/candidate'+str(pulse_width)+'.jpg', 'wb')
                 self.camera.capture(candidate)
                 candidate.close()
                 try:
-                    d, a, c = Dna().find_distance_and_angle('candidate'+str(pulse_width)+'.jpg')
+                    d, a, c = Dna().find_distance_and_angle('images/candidate'+str(pulse_width)+'.jpg')
                     # Check for already-found color
                     if c not in color:
                         distance.append(round(d, 2))
