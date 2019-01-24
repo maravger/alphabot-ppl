@@ -11,6 +11,7 @@ T = 0.5
 r = 0.0165  #wood wheel radious
 L = 0.132   # distance between  wheels 
 Ab = AlphaBot()
+Ab.stop()
 vmax = 80
 vmin= 45
 
@@ -59,7 +60,7 @@ class MicroControler(object) :
         
         counter = 2
         moves = 0 
-        while((fabs(xref-xo) >= fabs(xref)*e) or (fabs(fref-fo) >= 0.1)) : #yo) >= yref*e)  
+        while((fabs(xref-xo) > fabs(xref)*e) or (fabs(fref-fo) > 0.1)) : #yo) >= yref*e)  
             dt = T 
             c = 0 
             moves += 1
@@ -133,12 +134,13 @@ class MicroControler(object) :
                 if (left_voltage > vmax) : left_voltage = vmax
                 
                 
-                orientation = 0 
-                right_voltage = -right_voltage # an w > 0 tote prepei na paw eutheia ara ( - , + )
-                left_voltage = +left_voltage
+                if w >= 0:
+                    orientation = 0
+                    right_voltage = -right_voltage # an w > 0 tote prepei na paw eutheia ara ( - , + )
+                    left_voltage = +left_voltage
                 if w<0:         # an w < 0 tote prepei na paw opisthen ara ( + , - )            
                     right_voltage = -right_voltage 
-                    left_voltage =  -left_voltage
+                    left_voltage =  left_voltage
                     orientation = 1 
               
                # print ("w rad/sec: "+str(w))
@@ -146,7 +148,7 @@ class MicroControler(object) :
                 Ab.stop()
                 #print ("STOPPPPPPPPPPPPPPPPPPPP")
                 break ;  
-            #print ("right voltage :" + str(right_voltage) , "left_voltage "+ str(left_voltage))
+            print ("right voltage :" + str(right_voltage) , "left_voltage "+ str(left_voltage))
 
 
             #print ("apostasi apo stoxo se cm: "+str(fabs(xref-xo)) )

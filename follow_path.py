@@ -2,18 +2,21 @@ from simple_grid_nav import *
 import os
 import subprocess
 from self_locate import *
+from micro_controller import *
 
-DIAGRAM1_S = (1,4)
-DIAGRAM1_G = (7,8)
-DIAGRAM1 = GridWithWeights(10, 10)
-DIAGRAM1.walls = [(1, 7), (1, 8), (2, 7), (2, 8), (3, 7), (3, 8)]
-DIAGRAM1.weights = {loc: 5 for loc in [(3, 4), (3, 5), (4, 1), (4, 2),
-                                       (4, 3), (4, 4), (4, 5), (4, 6), 
-                                       (4, 7), (4, 8), (5, 1), (5, 2),
-                                       (5, 3), (5, 4), (5, 5), (5, 6), 
-                                       (5, 7), (5, 8), (6, 2), (6, 3), 
-                                       (6, 4), (6, 5), (6, 6), (6, 7), 
-                                       (7, 3), (7, 4), (7, 5)]}
+# Example Diagram with obstacles
+# DIAGRAM1_S = (1,4)
+# DIAGRAM1_G = (7,8)
+# DIAGRAM1 = GridWithWeights(10, 10)
+# DIAGRAM1.walls = [(1, 7), (1, 8), (2, 7), (2, 8), (3, 7), (3, 8)]
+# DIAGRAM1.weights = {loc: 5 for loc in [(3, 4), (3, 5), (4, 1), (4, 2),
+#                                        (4, 3), (4, 4), (4, 5), (4, 6), 
+#                                        (4, 7), (4, 8), (5, 1), (5, 2),
+#                                        (5, 3), (5, 4), (5, 5), (5, 6), 
+#                                        (5, 7), (5, 8), (6, 2), (6, 3), 
+#                                        (6, 4), (6, 5), (6, 6), (6, 7), 
+#                                        (7, 3), (7, 4), (7, 5)]}
+
 # (Column, Row)
 GRID_COLUMNS = 5
 GRID_ROWS = 5
@@ -26,7 +29,7 @@ CELL_SIZE = 50
 DIAGRAM2 = GridWithWeights(GRID_COLUMNS, GRID_ROWS)
 DIAGRAM2_S = (2,0) # Start
 DIAGRAM2_G = (2,3) # Goal
-ORIENT_REF_POINT = (2,4) # Red Beacon
+ORIENT_REF_ROW = 4 # Red Beacon
 
 # Encode Moveset
 RIGHT = 4
@@ -34,30 +37,29 @@ LEFT = 2
 DOWN = 3
 UP = 1
 
-def change_orientation(co, no):
+# Rotate AlphaBot according to its new desired orientation
+def change_orientation(mc, co, no):
     diff = no - co
     if (diff == 1 or diff == 3):
-        # rotate left
         print("Rotating LEFT!")
-        with open(os.devnull, 'wb') as devnull:
-            subprocess.check_call(['python', 'turn_left.py'], stdout=devnull, stderr=subprocess.STDOUT)
+        pos_arry = [0, 0, 0, 0, 0, 1.65]
     elif (diff == -1 or diff == -3):
         print("Rotating RIGHT!")
-        with open(os.devnull, 'wb') as devnull:
-            subprocess.check_call(['python', 'turn_right.py'], stdout=devnull, stderr=subprocess.STDOUT)
+        pos_arry = [0, 0, 0, 0, 0, -1.65]
     # Can only happen during first move
     elif (diff == 2 or diff == -2):
         print("Rotating BACKWARDS!")
-        with open(os.devnull, 'wb') as devnull:
-            subprocess.check_call(['python', 'turn_left.py'], stdout=devnull, stderr=subprocess.STDOUT)           
-            subprocess.check_call(['python', 'turn_left.py'], stdout=devnull, stderr=subprocess.STDOUT)
+        pos_arry = [0, 0, 0, 0, 0, 3.3]
     else:
         print("No need for rotation...")
+        pos_arry = [0, 0, 0, 0, 0, 0]
+    mc.move_and_control(pos_arry)
 
-def move_forward():
+# Move AlphaBot one tile forward
+def move_forward(mc):
     print("Moving FORWARD!")
-    with open(os.devnull, 'wb') as devnull:
-        subprocess.check_call(['python', 'velocity.py', '-51', '45'], stdout=devnull, stderr=subprocess.STDOUT)
+    pos_arry = [0, 0, 0, 0.5, 0, 0]
+    mc.move_and_control(pos_arry)
 
 # Return estimated AlphaBot's position in grid (column, row, orientation)
 def self_localize(self_locator):
@@ -70,8 +72,8 @@ def self_localize(self_locator):
 
 # Detect AlphaBot's orientation (degrees) relevant to a reference point in grid
 def detect_orientation(ax, ay, distance, theta_beac, color):
-    rx = ORIENT_REF_POINT[1] * CELL_SIZE + CELL_SIZE / 2
-    ry = ORIENT_REF_POINT[0] * CELL_SIZE + CELL_SIZE / 2
+    rx = ORIENT_REF_ROW * CELL_SIZE + CELL_SIZE / 2
+    ry = ay
     bx = BEACON_ROWS[color] * CELL_SIZE + CELL_SIZE / 2
     by = BEACON_COLUMNS[color] * CELL_SIZE + CELL_SIZE / 2 
 
@@ -88,7 +90,17 @@ def detect_orientation(ax, ay, distance, theta_beac, color):
     # Cosine Rule
     a = round(math.degrees(math.acos((bad ** 2 + ard ** 2 - brd ** 2) / (2 * bad * ard))), 2)
     print("Cosine Rule Angle: " + str(a))
-    theta_or = theta_beac - a
+    
+    # theta_or < 0 if the reference point is on the right of the alphabot, > 0 otherwise 
+    # if ((by < ry) and (theta_beac > 0)):
+    #     theta_or = theta_beac + a
+    # elif ((by < ry) and (theta_beac < 0)):
+    #     theta_or = theta_beac + a 
+    # elif ((by > ry) and (theta_beac > 0)):
+    #     theta_or = theta_beac - a
+    # elif ((by > ry) and (theta_beac < 0)):
+    #     theta_or = theta_beac - a
+    theta_or = theta_beac - ((by-ry)/math.fabs(by-ry)) * a
     print("Orientation Angle: " + str(theta_or))
 
     return theta_or
@@ -145,6 +157,7 @@ def detect_position_in_grid(distance, color):
 
 def main():
     sl = SelfLocator(300)
+    mc = MicroControler()
     # Solve A* and visualise path
     came_from, cost_so_far = a_star_search(DIAGRAM2, DIAGRAM2_S, DIAGRAM2_G)
     draw_grid(DIAGRAM2, width=3, point_to=came_from, start=DIAGRAM2_S, goal=DIAGRAM2_G)
@@ -178,10 +191,10 @@ def main():
             no = UP
         else:
             print("Invalid Next Move")
-        change_orientation(co, no)
+        #change_orientation(mc, co, no)
         cp = np
         co = no
-        # move_forward()
+        #move_forward(mc)
         column, row, orientation = self_localize(sl)
         print("_________________________________")
         print("End of Step")

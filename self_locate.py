@@ -17,19 +17,21 @@ class SelfLocator():
         self.camera = PiCamera()
         self.camera.resolution = (2592, 1944)
         self.step = step # 1Deg ~= 11.11ms
-
+    
     def dna_from_beacons(self):
         beacons_found = 0
-        pulse_width = 2650
-        distance = []
-        angle = []
-        color = []
-
+        step = self.step
         # Distance and angle from at least 2 Beacons is needed for accurate localisation
-        while ((beacons_found < 2) and self.step > 100):
+        while ((beacons_found < 2) and step > 100):
+            print("Scanning Step: " + str(step))
+            beacons_found = 0
+            pulse_width = 2650
+            distance = []
+            angle = []
+            color = []
             while (pulse_width >= 900):
                 # Scan area with a 30-angle step
-                pulse_width -= self.step
+                pulse_width -= step
                 with open(os.devnull, 'wb') as devnull:
                     subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', '27', '-w', str(pulse_width)], stdout=devnull, stderr=subprocess.STDOUT)
                 sleep(1)
@@ -54,7 +56,7 @@ class SelfLocator():
                     break
 
             # If no 2 beacons are found, try again with a smaller step
-            self.step = self.step / 2 
+            step = step / 2 
 
         print("-------------------------------")
         print distance, angle, color
