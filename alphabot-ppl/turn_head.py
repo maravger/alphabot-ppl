@@ -2,6 +2,8 @@ from RPIO import PWM
 import argparse
 from time import sleep
 
+# This function is separate from the rest of the functionality as it needs sudo 
+# rights to run.
 servo = PWM.Servo()
 
 ap = argparse.ArgumentParser()
@@ -11,4 +13,3 @@ args = vars(ap.parse_args())
 
 servo.set_servo(int(args["servo"]),int( args["width"]))
 sleep(1)
-#servo.stop_servo(int(args["servo"]))

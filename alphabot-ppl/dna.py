@@ -25,6 +25,8 @@ COLOR_BOUNDARIES = [
 ]
 
 class Dna(object):
+
+    # Detect Beacon color captured in the image
     def detect_color(self, image):
         # transfer to HSV colour space
         image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -113,7 +115,8 @@ class Dna(object):
     		print("\nOrange Beacon identified!")	
         
         return curr_cnt, curr_color
-
+    
+    # Calculate detected Beacon's contour
     def find_marker(self, image):
         # detect the beacon color and the respective contour based on it
         cnt, color = self.detect_color(image)   
@@ -121,6 +124,7 @@ class Dna(object):
         # compute the bounding box of the of the color region and return it 
         return (cv2.minAreaRect(cnt), cnt, color)
 
+    # Calculate the angle between the AlphaBot and the detected Beacon
     def find_angle(self, cnt, distance):
         # Find left extreme point
         leftmost = tuple(cnt[cnt[:,:,0].argmin()][0])
@@ -140,12 +144,14 @@ class Dna(object):
         c = a / b
         angle = math.asin(c)
         return angle
-
+    
+    # Calculate the distance between the AlphaBot and the detected Beacon 
     def find_distance(self, knownWidth, focalLength, perWidth, distFromCentre):
         # compute and return the distance from the maker to the camera
         return ((knownWidth * focalLength) / perWidth) + distFromCentre
 
-    def find_distance_and_angle(self, imagePath):
+    # Calculate distance and agle between the Alphabot and the detected Beacon
+    def find_distance_and_angle(self, imagePath):   
         print("Checking image: " + imagePath)
         # load the image, find the marker in the image, then compute the
         # distance to the marker from the camera

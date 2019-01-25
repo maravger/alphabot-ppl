@@ -16,7 +16,9 @@ class SelfLocator():
         self.camera = PiCamera()
         self.camera.resolution = (2592, 1944)
         self.step = step # 1Deg ~= 11.11ms
-    
+
+    # Scan the area (at most twice) seeking for Beacons. Capture pictures and calculate distance and angle 
+    # from them.
     def dna_from_beacons(self):
         beacons_found = 0
         step = self.step
