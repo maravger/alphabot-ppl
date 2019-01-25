@@ -3,7 +3,7 @@ import numpy as np
 import imutils
 import cv2
 import math
-from not_found_error import *
+from alphabot_exceptions import *
 
 # initialize the known object width (cm), which in this case is the beacon
 KNOWN_WIDTH = 8.5
@@ -70,22 +70,22 @@ class Dna(object):
                 			angle = marker[2]
             			else:
                 			# Cannot be sitting on their side
-                			raise ValueError
+                			raise BeaconNotValidError
             			print("Candidate contour width, height and angle:")
             			print round(width), round(height), round(angle, 2)
             
             			# Check if feasible beacon marker
                                 # 0: (WEAK) width must be greater than 100 pixels
                                 if not(width >= 100):
-                                        raise ValueError
+                                        raise BeaconNotValidError
                                 # 1: width to height ratio must be within the range of [0.37, 0.45]
             			elif not((width/height >= 0.37) and (width/height <= 0.45)):
-                			raise ValueError
+                			raise BeaconNotValidError
             			# 2: angle must be within the range of [-5, 5]
             			elif not(angle >= -5 and angle <= 5):
-                			raise ValueError 
+                			raise BeaconNotValidError
 			
-                        except ValueError:
+                        except BeaconNotValidError:
 				print('Not found!')
                                 width = 0
             			continue	
@@ -99,7 +99,7 @@ class Dna(object):
 
 	if (curr_width == 0):
     	    print "\nNo Beacon detected!"
-            raise NotFoundError
+            raise BeaconNotFoundError
     	    exit()
 
 

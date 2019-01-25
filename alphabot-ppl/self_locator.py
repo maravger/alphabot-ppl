@@ -6,7 +6,7 @@ from time import sleep
 from picamera import PiCamera
 from PIL import Image
 from dna import *
-import not_found_error
+import alphabot_exceptions
 
 S1 = 27 # or 22
 
@@ -51,7 +51,7 @@ class SelfLocator():
                     else:
                         print("Beacon already found, not updating")
                     print("-------------------------------\n")
-                except NotFoundError:
+                except BeaconNotFoundError:
                     continue
                 if (beacons_found == 2):
                     break
