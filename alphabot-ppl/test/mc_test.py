@@ -9,46 +9,37 @@ M = MicroControler()
 # - sth gwnia shmainei stripse deksia
 # + sth gwnia shmainei stripse aristera
 
-#a=[0,0,0,0.5,0,0]
-#a=[0,0,0,0,0,0.4]
-a=[0,0,0,0,0,-1.65]
-M.move_and_control(a)
-time.sleep(2)
-
+a=[0,0,0,0.5,0,0]
 '''
-a=[0,0,0,0.25,0,0]
 M.move_and_control(a)
 time.sleep(2)
-
-
-
-
-a=[0,0,0,0.25,0,0]
-M.move_and_control(a)
-print ("PROTI KINISI TELOS 25 CM ")
 time.sleep(2)
-
-
-a=[0.25,0,0,0.5,0,0]
+a=[0,0,0,0,0,-90]
 M.move_and_control(a)
-print ("deuteri KINISI TELOS 25 CM ")
 time.sleep(2)
-
-a=[0.5,0,0,0.5,0,-1.65]
+a=[0,0,0,0.5,0,0]
 M.move_and_control(a)
-print ("TRITI KINISI TELOS 90 moires  ")
 time.sleep(2)
-
-a=[0,0,0,-0.25,0,0]
+a=[0,0,0,0,0,60]
 M.move_and_control(a)
-print ("TETARTI KINISI TELOS 25 CM ")
 time.sleep(2)
-
-
-a=[0,0,0,0,0,-1.65]
+a=[0,0,0,0,0,60]
 M.move_and_control(a)
-print ("PEMPTI KINISI TELOS 90 MOIRES ")
+time.sleep(2)
+a=[0,0,0,0.5,0,0]
+M.move_and_control(a)
+#a=[0,0,0,0,0,-1.65]
 '''
+
+#a=[0,0,0,0,0,-0.351]   # 20 mories 
+#a=[0,0,0,0,0,-0.5235]  # 30 moires 
+#a=[0,0,0,0,0,0.7853]   # 45 moires
+#a=[0,0,0,0,0,-1.0471]  # 60 moires 
+#a=[0,0,0,0,0,-1.65]    # 90 mories 
+#a=[0,0,0,0,0,20]
+M.move_and_control(a)
+time.sleep(2)
+
 
 
 '''

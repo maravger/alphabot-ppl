@@ -46,6 +46,7 @@ class MicroControler(object) :
         rotational = 0 
         e = 0.1
         
+        #frefdegree = fref * 180 / pi
         
         if fref!=fo:
             print ("rotational move")
@@ -54,9 +55,11 @@ class MicroControler(object) :
             #    time.sleep(0.25)
             #    Ab.stop()
             rotational = 1
-            e= 0.15
-            T = 0.6
-
+            e= 0.10
+            T = ((fabs(fref)+6.2687)/134.7328)
+            print ("To T gia auth th gwnia einai : "+ str(T))
+            #T = 0.15
+        fref = fref*pi / 180
         
         counter = 2
         moves = 0 
@@ -68,9 +71,12 @@ class MicroControler(object) :
             # prwta peristrofikh meta metaforikh
             if (fabs(fref-fo) >= e):
                 if rotational == 1 and moves > 1:
-                    dt = dt/ 5 
+                    dt = ((fabs(fref)+6.2687)/134.7328)
+                    print ("To T gia auth th gwnia einai : "+ str(T))
+                    #dt = dt/ 6 
                 elif rotational ==0:
-                    dt = dt / 5 
+                    dt = ((fabs(fref)+6.2687)/134.7328)
+                    #dt = dt / 5 
                 print ("dt : " + str(dt))
                 # fix errors of not measuring wr,wl
                 if c > 0:
@@ -179,32 +185,16 @@ class MicroControler(object) :
             try:
                 wr = return_dict[0]
                 dtr = return_dict[2]
-
-                #right_voltage = (wr - B)/A
-                
-                #if (-vmin < right_voltage < 0) : right_voltage = -vmin
-                #if (right_voltage < - vmax) : right_voltage = -vmax
-                #if (0 <= right_voltage <  vmin) : right_voltage = vmin
-                #if (right_voltage > vmax) : right_voltage = vmax
-                #wr = right_voltage* A + B 
-
             except: 
                 print ("error1")
                 #wr = pi /(10 * T)  
                 wr = 0 
                 dtr =0
                 counter = counter -1 
+
             try:
                 wl = return_dict[1]
                 dtl = return_dict[3]
-                #left_voltage =  (wl - D)/C
-
-                #if (-vmin < left_voltage < 0) : left_voltage = -vmin
-                #if (left_voltage < - vmax) : left_voltage = -vmax
-                #if (0 <= left_voltage <  vmin) : left_voltage = vmin
-                #if (left_voltage > vmax) : left_voltage = vmax
-                #wl = left_voltage*C + D
-
             except: 
                 print ("error2")
                 #wl = pi / (10 * T) * 2 
@@ -214,11 +204,25 @@ class MicroControler(object) :
             if counter == 2 :
                 print ("dt: "+str(dt))
                 dt = (dtl+dtr)/counter
-                print ("dt: "+str(dt))
+                print ("dt: "+str(dt)) 
+            elif counter ==0 :
+                print ("two errors")
+                wr = (fref-fo)*L/(2*R*dt) # xronos misos diplasio w
+                wl = wr 
+                if rotational == 1 :
+                    break ; 
             else :
                 dt = dt 
                 c +=1
-
+            
+            if wr == 0 and wl != 0 :
+                wr = wl 
+                dtr= dtl
+                dt = (dtl+dtr)/2
+            elif wl == 0 and wr != 0 :
+                wl = wr
+                dtl = dtr
+                dt = (dtl+dtr)/2
         
         #calculate new xo,yo,fo
             

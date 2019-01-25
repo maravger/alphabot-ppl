@@ -3,6 +3,9 @@ import os
 import subprocess
 from self_locator import *
 from micro_controller import *
+import yaml
+
+CONFIG = yaml.load(open("../config.yaml"))
 
 # Example Diagram with obstacles
 # DIAGRAM1_S = (1,4)
@@ -18,18 +21,18 @@ from micro_controller import *
 #                                        (7, 3), (7, 4), (7, 5)]}
 
 # (Column, Row)
-GRID_COLUMNS = 5
-GRID_ROWS = 5
+GRID_COLUMNS = CONFIG["grid"]["columns"]
+GRID_ROWS = CONFIG["grid"]["columns"]
 
 # BEACON_COLORS = [0, 1, 2, 3, 4]
-BEACON_COLUMNS = [2, 4, 0, 4, 0]
-BEACON_ROWS = [4, 2, 4, 4, 2]
-CELL_SIZE = 50
+BEACON_COLUMNS = CONFIG["grid"]["beacons_columns"]
+BEACON_ROWS = CONFIG["grid"]["beacons_rows"]
+CELL_SIZE = CONFIG["grid"]["cell_size"]
 
 DIAGRAM2 = GridWithWeights(GRID_COLUMNS, GRID_ROWS)
-DIAGRAM2_S = (2,0) # Start
-DIAGRAM2_G = (2,3) # Goal
-ORIENT_REF_ROW = 4 # Red Beacon
+DIAGRAM2_S = CONFIG["grid"]["start"] # Start
+DIAGRAM2_G = CONFIG["grid"]["goal"] # Goal
+ORIENT_REF_ROW = CONFIG["grid"]["orientation_reference_row"] # Red Beacon
 
 # Encode Moveset
 RIGHT = 4

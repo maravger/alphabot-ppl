@@ -4,25 +4,23 @@ import imutils
 import cv2
 import math
 from alphabot_exceptions import *
+import yaml
+
+CONFIG = yaml.load(open("../config.yaml"))
 
 # initialize the known object width (cm), which in this case is the beacon
-KNOWN_WIDTH = 8.5
+KNOWN_WIDTH = CONFIG["beacon"]["real_width"]
 
 # initialize camera-lenses real world distance (cm) from robot centre
-DIST_FROM_CENTRE = 7
+DIST_FROM_CENTRE = CONFIG["beacon"]["distance_from_reference_pic"]
 
-PIC_CENTRE_WIDTH = 1296 # x-centre-coordinate of the 2596x1944 resolution picture
-FOCAL_LENGTH = 4305
+# x-centre-coordinate of the 2596x1944 resolution picture
+PIC_CENTRE_WIDTH = CONFIG["camera"]["pic_centre_width"] 
+FOCAL_LENGTH = CONFIG["camera"]["focal_length"]
 
 # define the list of HSV boundaries (red, blue, purple, yellow, orange)
 # IMPORTANT: colour boundaries should be in HSV: H (0-180) | S (0-255) | V (0-255)
-COLOR_BOUNDARIES = [
-    [([110, 120, 115], [180, 200, 255])], 
-    [([30, 75, 100], [110, 255, 255])], 
-    [([125, 10, 50], [160, 80 , 180])], 
-    [([20, 5, 125], [40, 255, 255])], 
-    [([5, 85, 100], [20, 230, 255])], 
-]
+COLOR_BOUNDARIES = CONFIG["beacon"]["hsv_color_boundaries"]
 
 class Dna(object):
 
@@ -85,7 +83,7 @@ class Dna(object):
             			elif not(angle >= -5 and angle <= 5):
                 			raise BeaconNotValidError
 			
-                        except BeaconNotValidError:
+                        except (BeaconNotValidError, ValueError):
 				print('Not found!')
                                 width = 0
             			continue	

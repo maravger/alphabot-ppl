@@ -7,8 +7,9 @@ from picamera import PiCamera
 from PIL import Image
 from dna import *
 import alphabot_exceptions
+import yaml
 
-S1 = 27 # or 22
+S1 = yaml.load(open("../config.yaml"))["camera"]["vertical_servo_pin"]
 
 class SelfLocator(): 
     
