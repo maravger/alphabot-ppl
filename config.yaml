@@ -44,6 +44,7 @@ camera:
   vertical_servo_pin: 27
 
 grid:
+  astar_or_dijkstra: 1 # 0 for A*, 1 for Dijkstra
   cell_size: 50
   columns: 5
   rows: 5

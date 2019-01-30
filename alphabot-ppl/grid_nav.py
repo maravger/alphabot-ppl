@@ -1,5 +1,9 @@
 import RPi.GPIO as GPIO
 import time
+import yaml
+
+CONFIG = yaml.load(open("../config.yaml"))
+ASTAR_OR_DIJKSTRA = CONFIG["grid"]["astar_or_dijkstra"]
 
 #Manhattan distance
 def heuristic(a,b):
@@ -25,7 +29,11 @@ def a_star_search(graph, start, goal):
                         new_cost = cost_so_far[current] + graph.cost(current, next)
                         if next not in cost_so_far or new_cost < cost_so_far[next]:
                                 cost_so_far[next] = new_cost
-                                priority = new_cost + heuristic(goal,next)
+                                if (ASTAR_OR_DIJKSTRA == 0):
+                                    priority = new_cost + heuristic(goal,next)
+                                else:
+                                    # if h(n) = 0, then A* degenerates to Dijkstra
+                                    priority = new_cost
                                 frontier.put(next, priority)
                                 came_from[next] = current
 
