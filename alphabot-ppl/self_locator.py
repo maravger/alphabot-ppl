@@ -8,8 +8,13 @@ from PIL import Image
 from dna import *
 import alphabot_exceptions
 import yaml
+import requests 
+import json 
 
-S1 = yaml.load(open("../config.yaml"))["camera"]["vertical_servo_pin"]
+CONFIG =yaml.load(open("../config.yaml"))
+S1 = CONFIG["camera"]["vertical_servo_pin"]
+OFFLOAD = CONFIG["offload"]
+POST_URL = CONFIG["post_url"]
 
 class SelfLocator(): 
     
@@ -41,7 +46,17 @@ class SelfLocator():
                 self.camera.capture(candidate)
                 candidate.close()
                 try:
-                    d, a, c = Dna().find_distance_and_angle('images/candidate'+str(pulse_width)+'.jpg')
+                    if OFFLOAD :  
+                        post_url = "http://192.168.1.114:8000/"
+                        files  = {"file": open('./images/candidate'+str(pulse_width)+".jpg", "rb")}
+                        r = requests.post(post_url, files=files )# , data=json)
+                        if r.status_code == 404 : 
+                            raise BeaconNotFoundError
+                        temp = json.loads(r.text)
+                        d , a , c = temp
+                    else : 
+                        d, a, c = Dna().find_distance_and_angle('images/candidate'+str(pulse_width)+'.jpg')
+
                     # Check for already-found color
                     if c not in color:
                         distance.append(round(d, 2))

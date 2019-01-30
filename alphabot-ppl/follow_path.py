@@ -4,6 +4,7 @@ import subprocess
 from self_locator import *
 from micro_controller import *
 import yaml
+import math
 
 CONFIG = yaml.load(open("../config.yaml"))
 
@@ -35,27 +36,27 @@ DIAGRAM2_G = CONFIG["grid"]["goal"] # Goal
 ORIENT_REF_ROW = CONFIG["grid"]["orientation_reference_row"] # Red Beacon
 
 # Encode Moveset
-RIGHT = 4
-LEFT = 2
-DOWN = 3
-UP = 1
+RIGHT = 4 # == + 90 deg
+LEFT = 2 # == -90 deg
+DOWN = 3 # == 0 deg
+UP = 1 # == 180 deg
 
 # Rotate AlphaBot according to its new desired orientation
-def change_orientation(mc, co, no):
+def change_orientation(mc, co, no, no_deg, sl):
     diff = no - co
     if (diff == 1 or diff == 3):
         print("Rotating LEFT!")
-        pos_arry = [0, 0, 0, 0, 0, 1.65]
+        pos_arry = [0, 0, 0, 0, 0, -no_deg]
     elif (diff == -1 or diff == -3):
         print("Rotating RIGHT!")
-        pos_arry = [0, 0, 0, 0, 0, -1.65]
+        pos_arry = [0, 0, 0, 0, 0, -no_deg]
     # Can only happen during first move
     elif (diff == 2 or diff == -2):
         print("Rotating BACKWARDS!")
-        pos_arry = [0, 0, 0, 0, 0, 3.3]
+        pos_arry = [0, 0, 0, 0, 0, no_deg]
     else:
         print("No need for rotation...")
-        pos_arry = [0, 0, 0, 0, 0, 0]
+        pos_arry = [0, 0, 0, 0, 0, no_deg]
     mc.move_and_control(pos_arry)
 
 # Move AlphaBot one tile forward
@@ -70,8 +71,8 @@ def self_localize(self_locator):
     b_distance, b_angle, b_color = self_locator.dna_from_beacons()
     x, y, column, row = detect_position_in_grid(b_distance, b_color)
     orientation = detect_orientation(x, y, b_distance[0], b_angle[0], b_color[0]) # angle from the first beacon is enough
-    print column, row, orientation
-    return column, row, orientation
+    print x, y, column, row, orientation
+    return x, y, column, row, orientation
 
 # Detect AlphaBot's orientation (degrees) relevant to a reference point in grid
 def detect_orientation(ax, ay, distance, theta_beac, color):
@@ -158,19 +159,24 @@ def detect_position_in_grid(distance, color):
     
     return x3, y3, column, row
 
+# A dp path planning algorithm (either dijkstra or a*)
+def plan_the_path(start, goal):
+    came_from, cost_so_far = a_star_search(DIAGRAM2, start, goal)
+    draw_grid(DIAGRAM2, width=3, point_to=came_from, start=start, goal=goal)
+    print("")
+    draw_grid(DIAGRAM2, width=3, number=cost_so_far, start=start, goal=goal)
+    print("")
+    draw_grid(DIAGRAM2, width=3, path=reconstruct_path(came_from, start = start, goal = goal))
+    path = reconstruct_path(came_from, start = start, goal = goal)
+    print(path)
+
+    return path
+
 def main():
     sl = SelfLocator(300)
     mc = MicroControler()
-    # Solve A* and visualise path
-    came_from, cost_so_far = a_star_search(DIAGRAM2, DIAGRAM2_S, DIAGRAM2_G)
-    draw_grid(DIAGRAM2, width=3, point_to=came_from, start=DIAGRAM2_S, goal=DIAGRAM2_G)
-    print("")
-    draw_grid(DIAGRAM2, width=3, number=cost_so_far, start=DIAGRAM2_S, goal=DIAGRAM2_G)
-    print("")
-    draw_grid(DIAGRAM2, width=3, path=reconstruct_path(came_from, start = DIAGRAM2_S, goal = DIAGRAM2_G))
-    path = reconstruct_path(came_from, start = DIAGRAM2_S, goal = DIAGRAM2_G)
-    print(path)
-
+    # Solve the dp and visualise path
+    path = plan_the_path(DIAGRAM2_S, DIAGRAM2_G)
     # Start following path
     print("Start following path...")
     cp = path.pop(0) # Get starting position
@@ -183,22 +189,53 @@ def main():
         if (np[0] - cp[0] == 1): # => no = RIGHT
             print("RIGHT")
             no = RIGHT # new orientation
+            no_deg = 90
         elif (np[0] - cp[0] == -1): # => no = LEFT
             print("LEFT")
             no = LEFT
+            no_deg = -90
         elif (np[1] - cp[1] == 1):
             print("DOWN")
             no = DOWN
+            no_deg = 0
         elif (np[1] - cp[1] == -1):
             print("UP")
             no = UP
+            no_deg = 180
         else:
             print("Invalid Next Move")
-        change_orientation(mc, co, no)
+        x, y, i, j, co = self_localize(sl)
+        # 1: check if re-calculation of the path is needed
+        print "Thinking that I am in position: "
+        print cp[0], cp[1]
+        print "I actually am at: "
+        print i, j
+        if ((i != cp[0]) or (j != cp[1])):
+            print "So, I need to plan the path again."
+            path = plan_the_path(i, j)
+            cp = path.pop(0)
+            continue
+        else:
+            print "So, no need for planning the path again."
+        # 2: change the orientation, use pythagorean theorem for calculating the new distance and angle
+        # to move to the next tile
+        a = x - (np[1] * CELL_SIZE + CELL_SIZE / 2)
+        b = y - (np[0] * CELL_SIZE + CELL_SIZE / 2)
+        distance = sqrt(a ** 2 + b ** 2)
+        no_deg = math.atan(float(a) / b)
+        print("Orientation should be: " + str(no) + "deg, but is: " + str(co) + "deg.")
+        deg_diff = co - no
+        if (math.fabs(deg_diff) > 15):
+            print("Fixing...")
+            mc.move_and_control([0, 0, 0, 0, 0, def_diff])
+        else:
+            print("Error too small. Ignoring")
+        change_orientation(mc, co, no, no_deg)
+        sleep(2) # TODO: temporary, just to visually check the soundness of the results; remove later
         cp = np
         co = no
+        # 3: move forward
         move_forward(mc)
-        column, row, orientation = self_localize(sl)
         print("_________________________________")
         print("End of Step")
         print("---------------------------------")
