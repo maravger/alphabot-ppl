@@ -1,0 +1,54 @@
+beacon:
+  # known object width (cm)
+  real_width: 8.5
+  # camera-lenses real world distance (cm) from robot centre
+  distance_from_reference_pic: 7
+  # colour boundaries when in HSV: H (0-180) | S (0-255) | V (0-255)
+  hsv_color_boundaries:
+  - - !!python/tuple # Red
+      - [110, 120, 115]
+      - [180, 200, 255]
+  - - !!python/tuple # Blue
+      - [30, 75, 100]
+      - [110, 255, 255]
+  - - !!python/tuple # Purple
+      - [125, 10, 50]
+      - [160, 80, 180]
+  - - !!python/tuple # Yellow
+      - [20, 5, 125]
+      - [40, 255, 255]
+  - - !!python/tuple # Orange
+      - [5, 85, 100]
+      - [20, 230, 255] 
+  rgb_color_boundaries:
+  - - !!python/tuple # Red 
+      - [70, 60, 200]
+      - [150, 110, 250]
+  - - !!python/tuple # Blue
+      - [160, 160, 0]
+      - [255, 255, 60]
+  - - !!python/tuple # Purple
+      - [95, 80, 95]
+      - [130, 110, 120]
+  - - !!python/tuple # Yellow
+      - [30, 130, 130]
+      - [80, 170, 160]
+  - - !!python/tuple # Orange
+      - [70, 100, 190]
+      - [145, 140, 240] 
+
+camera: 
+  focal_length: 4305 
+  # x-centre-coordinate of the 2596x1944 resolution picture
+  pic_centre_width: 1296
+  vertical_servo_pin: 27
+
+grid:
+  cell_size: 50
+  columns: 5
+  rows: 5
+  goal: !!python/tuple [2, 3]
+  start: !!python/tuple [2, 0]
+  beacons_columns: [2, 4, 0, 4, 0]
+  beacons_rows: [4, 2, 4, 4, 2]
+  orientation_reference_row: 4
