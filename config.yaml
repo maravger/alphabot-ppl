@@ -53,3 +53,7 @@ grid:
   beacons_columns: [2, 4, 0, 4, 0]
   beacons_rows: [4, 2, 4, 4, 2]
   orientation_reference_row: 4
+
+offload: false
+post_url : "http://192.168.1.114:8000/"
+
