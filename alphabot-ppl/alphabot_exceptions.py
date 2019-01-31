@@ -3,3 +3,6 @@ class BeaconNotFoundError(Exception):
 
 class BeaconNotValidError(Exception):
     pass
+
+class InsufficientLocalizationInfoError(Exception):
+    pass

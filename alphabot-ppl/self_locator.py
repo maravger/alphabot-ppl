@@ -76,6 +76,9 @@ class SelfLocator():
             step = step / 2 
 
         print("-------------------------------")
+        if (step =< 100):
+            raise InsufficientLocalizationInfoError
+            quit()
         print distance, angle, color
 
         # Allign camera's position before exiting
