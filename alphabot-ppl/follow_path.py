@@ -176,7 +176,11 @@ def main():
     sl = SelfLocator(300)
     mc = MicroControler()
     # Solve the dp and visualise path
-    x, y, i, j, co = self_localize(sl)
+    try:
+        x, y, i, j, co = self_localize(sl)
+    except InsufficientLocalizationInfoError:
+        print("I have no information regarding where I am. Quiting...")
+        quit()
     path = plan_the_path((i,j), DIAGRAM2_G)
     # Start following path
     print("Start following path...")
@@ -213,10 +217,25 @@ def main():
         raw_input("Press Enter to continue...")
         # 3: move forward
         print("Moving forward for " + str(distance) + "m")
-        move_forward(mc, distance)
+        # measure the distance and angle reported by the light sensors (encoders) for the last step
+        # use this information to get an estimation on the grid_position if beacon information 
+        # is not sufficient.
+        x_enc, y_enc, theta_enc = move_forward(mc, distance)
         cp = np
-        print("Self Localising...")
-        x, y, i, j, co = self_localize(sl)
+        try:
+            print("Self Localising...")
+            x, y, i, j, co = self_localize(sl)
+        except InsufficientLocalizationInfoError:
+            print("Beacon information not sufficient for localizing. Now using encoders' output...")
+            print("Last known beacon-based position: ")
+            print i, j, x, y, co
+            x += x_enc
+            y += y_enc
+            co += theta_enc
+            i = y // CELL_SIZE
+            j = x // CELL_SIZE
+            print("Current estimation of position: ")
+            print i, j, x, y, co
         print("_________________________________")
         print("End of Step")
         print("---------------------------------")
