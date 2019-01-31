@@ -266,6 +266,7 @@ class MicroControler(object) :
         #time.sleep(1-x)
         
         Ab.stop()
+        return (xo,yo,fo)
         
 
     def right_velocity(self, procnum, return_dict):

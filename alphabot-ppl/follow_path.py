@@ -60,9 +60,9 @@ def change_orientation(mc, co, no, no_deg, sl):
     mc.move_and_control(pos_arry)
 
 # Move AlphaBot one tile forward
-def move_forward(mc):
+def move_forward(mc, distance):
     print("Moving FORWARD!")
-    pos_arry = [0, 0, 0, 0.5, 0, 0]
+    pos_arry = [0, 0, 0, distance, 0, 0]
     mc.move_and_control(pos_arry)
 
 # Return estimated AlphaBot's position in grid (column, row, orientation)
@@ -176,69 +176,51 @@ def main():
     sl = SelfLocator(300)
     mc = MicroControler()
     # Solve the dp and visualise path
-    path = plan_the_path(DIAGRAM2_S, DIAGRAM2_G)
+    x, y, i, j, co = self_localize(sl)
+    path = plan_the_path((i,j), DIAGRAM2_G)
     # Start following path
     print("Start following path...")
     cp = path.pop(0) # Get starting position
-    co = DOWN # Assume that starting orientation is down
-    move = 0
     while path: # While path_list not empty
-        move += 1 
-	np = path.pop(0) # Get next position
-	# Define new orientation
-        if (np[0] - cp[0] == 1): # => no = RIGHT
-            print("RIGHT")
-            no = RIGHT # new orientation
-            no_deg = 90
-        elif (np[0] - cp[0] == -1): # => no = LEFT
-            print("LEFT")
-            no = LEFT
-            no_deg = -90
-        elif (np[1] - cp[1] == 1):
-            print("DOWN")
-            no = DOWN
-            no_deg = 0
-        elif (np[1] - cp[1] == -1):
-            print("UP")
-            no = UP
-            no_deg = 180
-        else:
-            print("Invalid Next Move")
-        x, y, i, j, co = self_localize(sl)
         # 1: check if re-calculation of the path is needed
         print "Thinking that I am in position: "
         print cp[0], cp[1]
         print "I actually am at: "
-        print i, j
+        print i, j, x, y
         if ((i != cp[0]) or (j != cp[1])):
             print "So, I need to plan the path again."
-            path = plan_the_path(i, j)
+            path = plan_the_path((i,j), DIAGRAM2_G)
             cp = path.pop(0)
             continue
         else:
             print "So, no need for planning the path again."
+        np = path.pop(0)
+        raw_input("Press Enter to continue...")
         # 2: change the orientation, use pythagorean theorem for calculating the new distance and angle
         # to move to the next tile
         a = x - (np[1] * CELL_SIZE + CELL_SIZE / 2)
         b = y - (np[0] * CELL_SIZE + CELL_SIZE / 2)
-        distance = sqrt(a ** 2 + b ** 2)
-        no_deg = math.atan(float(a) / b)
+        distance = math.sqrt(a ** 2 + b ** 2) / 100 # distance is needed in m.
+        no = math.atan(float(a) / b)
         print("Orientation should be: " + str(no) + "deg, but is: " + str(co) + "deg.")
         deg_diff = co - no
         if (math.fabs(deg_diff) > 15):
-            print("Fixing...")
-            mc.move_and_control([0, 0, 0, 0, 0, def_diff])
+            print("Fixing... Rotate " + str(deg_diff) + "deg")
+            mc.move_and_control([0, 0, 0, 0, 0, deg_diff])
         else:
             print("Error too small. Ignoring")
-        change_orientation(mc, co, no, no_deg)
-        sleep(2) # TODO: temporary, just to visually check the soundness of the results; remove later
-        cp = np
-        co = no
+        # TODO: temporary, just to visually check the soundness of the results; remove later
+        raw_input("Press Enter to continue...")
         # 3: move forward
-        move_forward(mc)
+        print("Moving forward for " + str(distance) + "m")
+        move_forward(mc, distance)
+        cp = np
+        print("Self Localising...")
+        x, y, i, j, co = self_localize(sl)
         print("_________________________________")
         print("End of Step")
         print("---------------------------------")
+        raw_input("Press Enter to continue...")
     print("Goal Reached")
 
 if __name__ == "__main__":
