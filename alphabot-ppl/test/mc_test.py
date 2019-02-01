@@ -9,7 +9,7 @@ M = MicroControler()
 # - sth gwnia shmainei stripse deksia
 # + sth gwnia shmainei stripse aristera
 
-a=[0,0,0,0.5,0,0]
+a=[0,0,0,0,0,90]
 '''
 M.move_and_control(a)
 time.sleep(2)

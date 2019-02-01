@@ -9,7 +9,9 @@ Pillow==5.4.1
 pyparsing==2.3.1
 python-dateutil==2.7.5
 pytz==2018.9
+PyYAML==3.13
 RPi.GPIO==0.6.5
 RPIO==2.0.0b1
 six==1.12.0
 subprocess32==3.5.3
+toml==0.10.0

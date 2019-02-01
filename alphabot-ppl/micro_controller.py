@@ -2,12 +2,11 @@ import RPi.GPIO as GPIO
 import time
 import sys
 import signal
-from math import pi, fabs, cos, sin
+from math import pi, fabs, cos, sin 
 from alphabot import AlphaBot
 import multiprocessing
 
 R = 0.034 # wheel radius (m) 6,6 cm 
-T = 0.5
 r = 0.0165  #wood wheel radious
 L = 0.132   # distance between  wheels 
 Ab = AlphaBot()
@@ -34,6 +33,8 @@ class MicroControler(object) :
 
     def move_and_control(self, a):
         start_time = time.time()
+        #T = 0.5 
+
         T = 0.5 
         reference_position = a
         xo = a[0]
@@ -49,7 +50,7 @@ class MicroControler(object) :
         #frefdegree = fref * 180 / pi
         
         if fref!=fo:
-            print ("rotational move")
+            #print ("rotational move")
             #if 0.5236 -e <= fref-fo <= 0.5236 + e : 
             #    Ab.setMotor(-40,-40)
             #    time.sleep(0.25)
@@ -57,40 +58,40 @@ class MicroControler(object) :
             rotational = 1
             e= 0.10
             T = ((fabs(fref)+6.2687)/134.7328)
-            print ("To T gia auth th gwnia einai : "+ str(T))
+            #print ("To T gia auth th gwnia einai : "+ str(T))
             #T = 0.15
         fref = fref*pi / 180
         
         counter = 2
         moves = 0 
-        while((fabs(xref-xo) > fabs(xref)*e) or (fabs(fref-fo) > 0.1)) : #yo) >= yref*e)  
+        while((fabs(xref-xo) > fabs(xref)*e) or (fabs(fref-fo) > e )) : #yo) >= yref*e)  
             dt = T 
             c = 0 
             moves += 1
+            if moves > 10 : 
+                break ; 
             # set velocities to reach xref,yref,fref
             # prwta peristrofikh meta metaforikh
             if (fabs(fref-fo) >= e):
                 if rotational == 1 and moves > 1:
+                    #Ab.stop()
+                    #break;
                     dt = ((fabs(fref)+6.2687)/134.7328)
-                    print ("To T gia auth th gwnia einai : "+ str(T))
-                    #dt = dt/ 6 
                 elif rotational ==0:
                     dt = ((fabs(fref)+6.2687)/134.7328)
-                    #dt = dt / 5 
-                print ("dt : " + str(dt))
                 # fix errors of not measuring wr,wl
                 if c > 0:
                     dt = dt /8
                     c = 0
-                print ("error sth gwnia " + str(fabs(fref-fo)))
+                #print ("error sth gwnia " + str(fabs(fref-fo)))
                 w= (fref-fo)*L/(2*R*dt) # xronos misos diplasio w
                 #print ("gwnia problhma")
-                print ("w PERISTROFI MONTELO rad/sec: "+str(w))
+                #print ("w PERISTROFI MONTELO rad/sec: "+str(w))
                 #Ab.stop()
                 #time.sleep(4)
                 right_voltage = (w - B)/A
                 left_voltage =  (w - D)/C
-                print ("right_voltage: "+str(right_voltage)+ " left_voltage: "+str(left_voltage))
+                #print ("right_voltage: "+str(right_voltage)+ " left_voltage: "+str(left_voltage))
                 
                 if (-vmin < right_voltage < 0) : right_voltage = - vmin# + 10 
                 if (right_voltage < - vmax) : right_voltage = - vmax
@@ -107,24 +108,18 @@ class MicroControler(object) :
                     orientation = 2
                     right_voltage= -right_voltage
                     left_voltage= -left_voltage
-
-
                 else: # prepei na stripsw pros ta aristera ( - , - )
                     orientation = 3
                     right_voltage= -right_voltage
                     left_voltage= -left_voltage
-
-
                 #print ("apoklisi gwnias se rad: "+str(fref-fo))
-                print ("w PERISTROFI rad/sec: "+str(w)+ " orientation: "+str(orientation))
-                print ("right_voltage: "+str(right_voltage)+ " left_voltage: "+str(left_voltage))
+                #print ("w PERISTROFI rad/sec: "+str(w)+ " orientation: "+str(orientation))
+                #print ("right_voltage: "+str(right_voltage)+ " left_voltage: "+str(left_voltage))
                 #print str(w)
             
-            
-            
-            
-            elif (fabs(xref-xo)>=fabs(xref*0.1) and (rotational!= 1)):
-                print ("metaforiki kinhsh")
+            elif (fabs(xref-xo)>= 0.05 and (rotational!= 1)):
+                
+                #print ("metaforiki kinhsh")
                 w = (xref-xo)/(R*dt)
                 #print ("w rad/sec: "+str(w))
                 right_voltage = (w - B)/A
@@ -154,7 +149,7 @@ class MicroControler(object) :
                 Ab.stop()
                 #print ("STOPPPPPPPPPPPPPPPPPPPP")
                 break ;  
-            print ("right voltage :" + str(right_voltage) , "left_voltage "+ str(left_voltage))
+            #print ("right voltage :" + str(right_voltage) , "left_voltage "+ str(left_voltage))
 
 
             #print ("apostasi apo stoxo se cm: "+str(fabs(xref-xo)) )
@@ -185,8 +180,14 @@ class MicroControler(object) :
             try:
                 wr = return_dict[0]
                 dtr = return_dict[2]
+                if wr > A*vmax+B :
+                    print "measured maximum wr "
+                    wr = A * vmax +B
+                #elif wr < A*vmin+ B:
+                #    print "measured minimum wr "
+                #    wr = A* vmin + B
             except: 
-                print ("error1")
+                #print ("error1")
                 #wr = pi /(10 * T)  
                 wr = 0 
                 dtr =0
@@ -195,18 +196,23 @@ class MicroControler(object) :
             try:
                 wl = return_dict[1]
                 dtl = return_dict[3]
+                if wl > C*vmax+D :
+                    print "measured maximum wl "
+                    wl = C * vmax +D
+                #elif wr < C*vin+D :
+                #    print "measured minimum wl "
+                    #wl = C* vmin + D
             except: 
-                print ("error2")
+                #print ("error2")
                 #wl = pi / (10 * T) * 2 
                 wl = 0 
                 counter = counter -1 
                 dtl = 0
             if counter == 2 :
-                print ("dt: "+str(dt))
                 dt = (dtl+dtr)/counter
-                print ("dt: "+str(dt)) 
+                #print ("dt: "+str(dt)) 
             elif counter ==0 :
-                print ("two errors")
+                print ("two errors when reading from light sensors")
                 wr = (fref-fo)*L/(2*R*dt) # xronos misos diplasio w
                 wl = wr 
                 if rotational == 1 :
@@ -237,36 +243,40 @@ class MicroControler(object) :
 
             
             fo = fo + dt * R*(wr-wl)/L
-            print ("measured  wr , wl , dt , f0 : "+str(wr) , str(wl), str(dt), str(fo))
+
+            print ("Measured  wr: "+str(round(wr,2))+" rad/s" , "  wl: "+str(round(wl,2))+" rad/s", " dt of mesaurement: "+ str(round(dt,2)) +" ms",  " Angle from initial orientation of this step, f0: "+ str(round((fabs(fref*180/pi)-(fo*180/pi)),2))+" degrees")
             
-            if fo > 2*pi : fo = fo - 2*pi    # estw oti exw kanei kuklo mhdenise
-            if fo < -2*pi : fo = fo + 2*pi
+            if fo > 2*pi : 
+                fo = fo - 2*pi
+                print "exw kanei ena kuklo"
+                # estw oti exw kanei kuklo mhdenise
+            if fo < -2*pi : 
+                fo = fo + 2*pi
+                print "exw kanei ena kuklo"
             
             
             if orientation == 1 :
                 wr= -wr
                 wl= -wl
-                print ("phgainw opisthen")
-            
+                #print ("phgainw opisthen")
             
             if orientation ==0  or orientation==1:
                 xo = xo + dt*cos(fo)*R*(wr+wl)/2 
                 yo = yo + dt*sin(fo)*R*(wr+wl)/2 
         
-            if fo > 2*pi : fo = fo - 2*pi
-            if fo < -2*pi : fo = fo + 2*pi
-            print ("xo: "+str(xo), " yo: "+str(yo) ,  " fo: "+str(fo))
+            print ("Measured values from light sensors:  xo: "+str(round(xo*100,2))+" cm", " yo: "+str(round(yo*100,2)) +" cm",  " fo: "+str(round((fo*180/pi),2))+" degrees")
             Ab.stop()
             time.sleep(0.5)
-
         
         end_time = time.time()
         x = end_time - start_time 
-        print str(x)
-        #time.sleep(1-x)
+        #print str(x)
         
         Ab.stop()
-        return (xo,yo,fo)
+        xo = round(xo*100,2)
+        yo = round(yo*100,2)
+        fo = round(fo *180 / pi,2) 
+        return xo,yo,fo
         
 
     def right_velocity(self, procnum, return_dict):
