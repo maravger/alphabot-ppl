@@ -12,7 +12,10 @@ import requests
 import json 
 
 CONFIG =yaml.load(open("../config.yaml"))
-S1 = CONFIG["camera"]["vertical_servo_pin"]
+S1 = str(CONFIG["camera"]["vertical_servo_pin"])
+S2 = str(CONFIG["camera"]["horizontal_servo_pin"])
+CAMERA_RESOLUTION = CONFIG["camera"]["resolution"]
+SCANNING_STEP = CONFIG["camera"]["scanning_step"]
 OFFLOAD = CONFIG["offload"]
 POST_URL = CONFIG["post_url"]
 
@@ -20,8 +23,8 @@ class SelfLocator():
     
     def __init__(self, step):
         self.camera = PiCamera()
-        self.camera.resolution = (2592, 1944)
-        self.step = step # 1Deg ~= 11.11ms
+        self.camera.resolution = CAMERA_RESOLUTION
+        self.step = SCANNING_STEP # 1Deg ~= 11.11ms
 
     # Scan the area (at most twice) seeking for Beacons. Capture pictures and calculate distance and angle 
     # from them.
@@ -35,8 +38,8 @@ class SelfLocator():
         # Bringing the camera to an upright position
         print("Bringing camera to the upright position...\n")
         with open(os.devnull, 'wb') as devnull:
-            subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', '22', '-w', 
-                str(1600)], stdout=devnull, stderr=subprocess.STDOUT)
+            subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', S2, '-w', 
+                "1600"], stdout=devnull, stderr=subprocess.STDOUT)
         # Distance and angle from at least 2 Beacons is needed for accurate localisation
         while (step > 200):
             print("Scanning Step: " + str(step))
@@ -49,7 +52,7 @@ class SelfLocator():
                 # Scan area with a 30-angle step
                 pulse_width -= step
                 with open(os.devnull, 'wb') as devnull:
-                    subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', '27', '-w', 
+                    subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', S1, '-w', 
                         str(pulse_width)], stdout=devnull, stderr=subprocess.STDOUT)
                 sleep(1)
                 candidate = open('images/candidate' + str(pulse_width) + '.jpg', 'wb')
@@ -82,7 +85,7 @@ class SelfLocator():
                     print("-------------------------------")
                     # Allign camera's position before exiting (the camera's weight messes with movement)
                     with open(os.devnull, 'wb') as devnull:
-                        subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', '27', '-w', '1600'], 
+                        subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', S1, '-w', '1600'], 
                                 stdout=devnull, stderr=subprocess.STDOUT)
                     return distance, angle, color
 
@@ -92,7 +95,7 @@ class SelfLocator():
         print("-------------------------------")
         # Allign camera's position before exiting (the camera's weight messes with movement)
         with open(os.devnull, 'wb') as devnull:
-            subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', '27', '-w', '1600'], 
+            subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', S1, '-w', '1600'], 
                     stdout=devnull, stderr=subprocess.STDOUT)
 
         raise InsufficientLocalizationInfoError

@@ -37,6 +37,8 @@ DIAGRAM2_S = CONFIG["grid"]["start"] # Start
 DIAGRAM2_G = CONFIG["grid"]["goal"] # Goal
 ORIENT_REF_ROW = CONFIG["grid"]["orientation_reference_row"] # Red Beacon
 
+S1 = str(CONFIG["camera"]["vertical_servo_pin"])
+
 # Rotate AlphaBot according to its new desired orientation
 def change_orientation(mc, co, no):
     print("Orientation should be: " + str(no) + "deg, but is: " + str(co) + "deg.")
@@ -64,7 +66,8 @@ def self_localize(self_locator):
     print("Self Localising...")
     b_distance, b_angle, b_color = self_locator.dna_from_beacons()
     x, y, column, row = detect_position_in_grid(b_distance, b_color)
-    orientation = detect_orientation(x, y, b_distance[0], b_angle[0], b_color[0]) # angle from the first beacon is enough
+    # angle from the first beacon is enough
+    orientation = detect_orientation(x, y, b_distance[0], b_angle[0], b_color[0]) 
     # print x, y, column, row, orientation
     return x, y, column, row, orientation
 
@@ -167,7 +170,10 @@ def plan_the_path(start, goal):
     return path
 
 def signal_handler(sig, frame):
-    print(' was pressed! Terminating...\n')
+    print(' was pressed! Fixing camera position and terminating...\n')
+    with open(os.devnull, 'wb') as devnull:
+        subprocess.check_call(['sudo', 'python', 'turn_head.py', '-s', S1, '-w', '1600'], 
+            stdout=devnull, stderr=subprocess.STDOUT)
     sys.exit(0)
 
 def main():
